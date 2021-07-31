@@ -9,13 +9,6 @@ Valores
 01/10 a 15/11 U$ 0,07
 16/11 a 31/12 U$ 0,10
 
-start = 15/08
-end   = 31/12
-
-phase0 = >= 15/08 <= 30/09
-phase1 = >= 01/10 <= 15/11
-phase2 = >= 16/11 <= 31/12
-
 Bonus por volume de compra na pre venda
 +30 mil tokens 2% 
 +50 mil tokens 4%
