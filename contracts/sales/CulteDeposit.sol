@@ -3,10 +3,9 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/ownership/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-//import "@openzeppelin/contracts/token/ERC20/ERC20Mintable.sol";
-import "./interfaces/CulteDeposit.sol";
-import "./interfaces/Tentacle.sol";
-import "./interfaces/TokenRecipient.sol";
+import "../interfaces/ICulteDeposit.sol";
+import "../interfaces/Tentacle.sol";
+import "../interfaces/TokenRecipient.sol";
 
 
 /**
