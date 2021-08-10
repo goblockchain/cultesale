@@ -5,9 +5,11 @@ const {
     expectRevert,
     time
 } = require('@openzeppelin/test-helpers');
+
 const {
     ZERO_ADDRESS
 } = constants;
+
 const truffleAssert = require('truffle-assertions');
 
 const CulteDeposit = artifacts.require('CulteDepositCore');
