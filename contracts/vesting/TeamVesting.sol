@@ -27,7 +27,7 @@ contract TeamVesting is Ownable {
     IERC20 public token;
     CulteSale public saleContract;
 
-    // Durations and timestamps are expressed in UNIX time, the same units as block.timestamp.
+    // Durations and timestamps are expressed in UNIX time, the same units as now.
     uint256 public released;
     uint256 public duration; // max duration, tokens returned to creator after lapsed, use timing of the sale.
 
@@ -44,7 +44,7 @@ contract TeamVesting is Ownable {
         // solhint-disable-next-line max-line-length
         require(_duration > 0, "TeamVesting: duration is 0");
         // solhint-disable-next-line max-line-length
-        require(now.add(_duration) > block.timestamp, "TeamVesting: final time is before current time");
+        require(now.add(_duration) > now, "TeamVesting: final time is before current time");
 
         beneficiary = _beneficiary;
         duration = _duration;

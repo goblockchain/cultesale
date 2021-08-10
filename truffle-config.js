@@ -110,5 +110,7 @@ module.exports = {
 
   db: {
     enabled: false
-  }
+  },
+
+  plugins: [ "truffle-security" ]
 };

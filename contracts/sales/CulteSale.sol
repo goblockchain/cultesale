@@ -25,7 +25,7 @@ contract CulteSale is Ownable, CulteVesting {
 
     Structs.Phase[] private phases;
     Structs.Bonus[] private bonus;
-   
+
     /**
      * @notice Initializes the contract
      * @param _culteTokenContractAddress The address of the CLT token contract
@@ -47,7 +47,7 @@ contract CulteSale is Ownable, CulteVesting {
     )
     {
         require(_initialWallet != address(0), "need a wallet to receive funds");
-        
+
         CLT = ERC20(_culteTokenContractAddress);
         wallet = _initialWallet;
         startDate = _startDate;
@@ -89,7 +89,7 @@ contract CulteSale is Ownable, CulteVesting {
         phases.push(Structs.Phase(start2, salesEnd, 31*10**13, 42*10**6, 0));
     }
 
-    /** 
+    /**
     * @notice Set the pre-launch bonus according to the requirements:
     * ....... Bonus per sale configuration (Applied to entire pre-launch period)
     * ....... Para toda pre-venda mesma regra
@@ -152,7 +152,7 @@ contract CulteSale is Ownable, CulteVesting {
         _salesPhase.amountSold = SafeMath.add(_salesPhase.amountSold, quantity);
         // updates the sale supply
         _salesPhase.saleSupply = SafeMath.sub(_salesPhase.saleSupply, quantity);
-        
+
         return quantity;
     }
 
@@ -162,12 +162,12 @@ contract CulteSale is Ownable, CulteVesting {
      * @return The amount with the bonus applied
      */
     function applyBonus(uint256 _cltAmount) public view returns (uint256) {
-        
+
         uint256 divCheck = _cltAmount.mul(100);
-        require(divCheck.div(100) == _cltAmount, '_amount to small for percent calculation');
+        require(divCheck.div(100) == _cltAmount, "_amount to small for percent calculation");
         uint256 currentBonus = getCurrentBonus(_cltAmount);
         uint256 mult = _cltAmount.mul(currentBonus);
-       
+
         return mult.div(100);
     }
 
@@ -185,7 +185,7 @@ contract CulteSale is Ownable, CulteVesting {
     * @return The sales phase
     */
     function getCurrentPhase() internal view returns (Structs.Phase storage) {
-        
+
         for(uint256 i = 0; i < phases.length; i++) {
 
             uint256 _start = phases[i].start;

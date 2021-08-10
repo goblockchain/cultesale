@@ -1,7 +1,7 @@
 pragma solidity ^0.5.0;
 
-contract Structs {    
-    
+contract Structs {
+
     struct Phase {
         uint256 start;
         uint256 end;

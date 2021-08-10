@@ -29,7 +29,7 @@ contract CulteVesting is Ownable {
 
     IERC20 public token;
 
-    // Durations and timestamps are expressed in UNIX time, the same units as block.timestamp.
+    // Durations and timestamps are expressed in UNIX time, the same units as now.
     uint256 public cliff;
     uint256 public start;
     uint256 public duration;
@@ -51,7 +51,7 @@ contract CulteVesting is Ownable {
         require(_cliffDuration <= _duration, "TokenVesting: cliff is longer than duration");
         require(_duration > 0, "TokenVesting: duration is 0");
         // solhint-disable-next-line max-line-length
-        require(_start.add(_duration) > block.timestamp, "TokenVesting: final time is before current time");
+        require(_start.add(_duration) > now, "TokenVesting: final time is before current time");
 
         beneficiary = _beneficiary;
         duration = _duration;
@@ -89,12 +89,12 @@ contract CulteVesting is Ownable {
         uint256 currentBalance = token.balanceOf(address(this));
         uint256 totalBalance = currentBalance.add(released);
 
-        if (block.timestamp < cliff) {
+        if (now < cliff) {
             return 0;
-        } else if (block.timestamp >= start.add(duration)) {
+        } else if (now >= start.add(duration)) {
             return totalBalance;
         } else {
-            return totalBalance.mul(block.timestamp.sub(start)).div(duration);
+            return totalBalance.mul(now.sub(start)).div(duration);
         }
     }
 }
