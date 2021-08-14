@@ -13,134 +13,99 @@ const {
   expect
 } = require('chai');
 
-const CulteSaleMock = artifacts.require("CulteSaleMock");
-const CulteToken = artifacts.require("CulteToken");
+const CulteToken = artifacts.require('CulteToken');
 const TeamVesting = artifacts.require('TeamVesting');
 
 contract("TeamVesting", async accounts => {
-  const amount = new BN('10000');
+  const amount = new BN('4200010');
   const beneficiary = accounts[1];
   const owner = accounts[2];
 
   beforeEach(async function () {
     // +1 minute so it starts after contract instantiation
-    duration = time.duration.years(2);
+    this.start = (await time.latest()).add(time.duration.minutes(1));
   });
 
   it('reverts with a null beneficiary', async function () {
     await expectRevert(
-      TeamVesting.new(owner, owner, ZERO_ADDRESS, duration, {
+      TeamVesting.new(owner, ZERO_ADDRESS, this.start, {
         from: owner
       }),
       'TeamVesting: beneficiary is the zero address'
     );
   });
 
-  it('reverts with a null duration', async function () {
-    // cliffDuration should also be 0, since the duration must be larger than the cliff
+  it('reverts with a null start date', async function () {
     await expectRevert(
-      TeamVesting.new(owner, owner, beneficiary, 0, {
+      TeamVesting.new(owner, beneficiary, 0, {
         from: owner
-      }), 'TeamVesting: duration is 0'
+      }), 'TeamVesting: start date is zero'
     );
   });
 
   context('once deployed', function () {
     beforeEach(async function () {
 
+      this.token = await CulteToken.new({
+        from: owner
+      });
 
-      clt = await CulteToken.new();
-
-      sale = await CulteSaleMock.new();
-
-      vesting = await TeamVesting.new(
-        clt.address, sale.address, beneficiary, duration, {
+      this.vesting = await TeamVesting.new(
+        this.token.address, beneficiary, this.start, {
           from: owner
         });
 
 
-      await clt.transfer(vesting.address, amount);
+      await this.token.transfer(this.vesting.address, amount, {
+        from: owner
+      });
     });
 
     it('can get state', async function () {
-      expect(await vesting.beneficiary()).to.equal(beneficiary);
-      expect(await vesting.duration()).to.be.bignumber.equal(duration);
+      expect(await this.vesting.beneficiary()).to.equal(beneficiary);
+      expect(await this.vesting.nextRelease()).to.be.bignumber.equal(this.start);
     });
 
-    it('cannot be released before sales', async function () {
-      await expectRevert(vesting.release(),
-        'TeamVesting: no tokens are due'
+    it('cannot be released before next release date', async function () {
+      await this.vesting.release();
+      await expectRevert(this.vesting.release(),
+        'TeamVesting: no tokens available yet'
       );
     });
 
-    it('should release proper amount during sales', async function () {
-      // await time.increaseTo(this.start.add(this.cliffDuration));
+    it('should release proper amount (first release)', async function () {
+      await time.increaseTo(this.start.add(time.duration.minutes(1)));
 
-      // setting total sold to 10%
-      await sale.setTotal("4200000000000000000000000");
+      let receipt = await this.vesting.release();
 
-      await vesting.release();
-
-      let releasedAmount = "1000" // (10%)
-      expect(await clt.balanceOf(beneficiary)).to.be.bignumber.equal(releasedAmount);
-      expect(await vesting.released()).to.be.bignumber.equal(releasedAmount);
-
-      // setting total sold to 50%
-      await sale.setTotal("21000000000000000000000000");
-
-      await vesting.release();
-
-      releasedAmount = "5000" // (10%)
-      expect(await clt.balanceOf(beneficiary)).to.be.bignumber.equal(releasedAmount);
-      expect(await vesting.released()).to.be.bignumber.equal(releasedAmount);
-
-      // setting total sold to 100%
-      await sale.setTotal("42000000000000000000000000");
-
-      await vesting.release();
-
-      releasedAmount = "10000" // (10%)
-      expect(await clt.balanceOf(beneficiary)).to.be.bignumber.equal(releasedAmount);
-      expect(await vesting.released()).to.be.bignumber.equal(releasedAmount);
+      const releasedAmount = receipt.logs[0].args.amount;
+      const firstReleaseAmount = new BN('4200000');      
+      expect(await this.token.balanceOf(beneficiary)).to.be.bignumber.equal(firstReleaseAmount);
+      expect(await this.token.balanceOf(beneficiary)).to.be.bignumber.equal(firstReleaseAmount);
+      expect(await this.token.balanceOf(this.vesting.address)).to.be.bignumber.equal(new BN(amount - firstReleaseAmount));
+      expect(await this.vesting.released()).to.be.bignumber.equal(releasedAmount);
     });
 
-    it('should return the non-vested tokens when revoked by owner', async function () {
-      // setting total sold to 50%
-      await sale.setTotal("21000000000000000000000000");
+    it('should linearly release tokens during vesting period', async function () {
+      let now = this.start.add(time.duration.days(31));
+      let expectedVesting = new BN(0);
+      let shouldContinue = true;
 
-      await vesting.revoke({
-        from: owner
-      });
-
-      expect(await clt.balanceOf(owner)).to.be.bignumber.equal("5000"); //50%
+      while(shouldContinue) {
+        let vestingAmount = (await this.token.balanceOf(this.vesting.address)).toNumber();
+        if(vestingAmount == 0) {
+          break;
+        }
+        
+        now = now.add(time.duration.days(31));
+        await time.increaseTo(now);
+        
+        let receipt = await this.vesting.release();
+        expectedVesting = expectedVesting.add(new BN(receipt.logs[0].args.amount.toNumber()));
+        expect(await this.vesting.released()).to.be.bignumber.equal(expectedVesting);
+      }
+      expect(await this.token.balanceOf(beneficiary)).to.be.bignumber.equal(amount);
+      expect(await this.vesting.released()).to.be.bignumber.equal(amount);
     });
-
-    it('should keep the vested tokens when revoked by owner', async function () {
-
-      // setting total sold to 60%
-      await sale.setTotal("25200000000000000000000000");
-
-      await vesting.revoke({
-        from: owner
-      });
-
-      expect(await clt.balanceOf(vesting.address)).to.be.bignumber.equal("6000"); //60%
-    });
-
-    it('only owner can revoke', async function () {
-
-      // setting total sold to 60%
-      await sale.setTotal("25200000000000000000000000");
-
-      await expectRevert(
-        vesting.revoke({
-          from: beneficiary
-        }),
-        'Ownable: caller is not the owner'
-      );
-
-      expect(await clt.balanceOf(vesting.address)).to.be.bignumber.equal(amount); //100%, 
-    });
-
   });
 });

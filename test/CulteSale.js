@@ -1,7 +1,6 @@
-const truffleAssert = require('truffle-assertions');
-
 const CulteSale = artifacts.require("CulteSale");
 const CulteToken = artifacts.require("CulteToken");
+const BinanceCotationOracle = artifacts.require("BinanceCotationOracle");
 
 
 contract("CulteSale", async accounts => {
@@ -9,16 +8,19 @@ contract("CulteSale", async accounts => {
     let wallet;
     let clt;
     let sale;
+    let binanceOracle;
 
     beforeEach('Setup contract for each test', async () => {
         // setting up contracts
         wallet = accounts[9];
 
         clt = await CulteToken.new();
+        binanceOracle = await BinanceCotationOracle.new();
         sale = await CulteSale.new(
             clt.address,
             wallet,
-            Math.floor(Date.now() / 1000)
+            Math.floor(Date.now() / 1000),
+            binanceOracle.address
         );
 
         // sending all tokens to sales contract
@@ -104,7 +106,8 @@ contract("CulteSale", async accounts => {
  
         let cultPrice = result.logs[0].args._currentPrice.toNumber();
 
-        assert.equal(cultPrice, 15*10**13);
+        let binancePrice = (await binanceOracle.getCurrentCentAsBnb()).toNumber();
+        assert.equal(cultPrice, binancePrice * 5);
     });
 
     it("Should apply for offer 2", async () => {
@@ -114,10 +117,12 @@ contract("CulteSale", async accounts => {
 
         // Init mock sales to offer 2 ***********************************************
         let newClt = await CulteToken.new();
+        let newBinanceOracle = await BinanceCotationOracle.new();
         let newSale = await CulteSale.new(
             newClt.address,
             wallet,
-            Math.floor(myEpoch)
+            Math.floor(myEpoch),
+            newBinanceOracle.address
         );
         // sending all tokens to sales contract
         await newClt.transfer(newSale.address, "210000000000000000000000000");
@@ -130,7 +135,8 @@ contract("CulteSale", async accounts => {
  
         let cultPrice = result.logs[0].args._currentPrice.toNumber();
 
-        assert.equal(cultPrice, 22*10**13);
+        let binancePrice = (await binanceOracle.getCurrentCentAsBnb()).toNumber();
+        assert.equal(cultPrice, binancePrice * 7);
     });
 
     it("Should apply for offer 3", async () => {
@@ -140,10 +146,12 @@ contract("CulteSale", async accounts => {
 
         // Init mock sales to offer 3 ***********************************************
         let newClt = await CulteToken.new();
+        let newBinanceOracle = await BinanceCotationOracle.new();
         let newSale = await CulteSale.new(
             newClt.address,
             wallet,
-            Math.floor(myEpoch)
+            Math.floor(myEpoch),
+            newBinanceOracle.address
         );
         // sending all tokens to sales contract
         await newClt.transfer(newSale.address, "210000000000000000000000000");
@@ -155,8 +163,8 @@ contract("CulteSale", async accounts => {
         });
  
         let cultPrice = result.logs[0].args._currentPrice.toNumber();
-
-        assert.equal(cultPrice, 31*10**13);
+        let binancePrice = (await binanceOracle.getCurrentCentAsBnb()).toNumber();
+        assert.equal(cultPrice, binancePrice * 10);
     });
 
 });

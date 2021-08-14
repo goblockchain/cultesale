@@ -24,51 +24,22 @@ contract("CulteVesting", async accounts => {
   beforeEach(async function () {
     // +1 minute so it starts after contract instantiation
     this.start = (await time.latest()).add(time.duration.minutes(1));
-    this.cliffDuration = time.duration.years(1);
-    this.duration = time.duration.years(2);
-  });
-
-  it('reverts with a duration shorter than the cliff', async function () {
-    const cliffDuration = this.duration;
-    const duration = this.cliffDuration;
-
-    expect(cliffDuration).to.be.bignumber.that.is.at.least(duration);
-
-    await expectRevert(
-      TokenVesting.new(owner, beneficiary, this.start, cliffDuration, duration, {
-        from: owner
-      }),
-      'TokenVesting: cliff is longer than duration'
-    );
   });
 
   it('reverts with a null beneficiary', async function () {
     await expectRevert(
-      TokenVesting.new(owner, ZERO_ADDRESS, this.start, this.cliffDuration, this.duration, {
+      TokenVesting.new(owner, ZERO_ADDRESS, this.start, {
         from: owner
       }),
       'TokenVesting: beneficiary is the zero address'
     );
   });
 
-  it('reverts with a null duration', async function () {
-    // cliffDuration should also be 0, since the duration must be larger than the cliff
+  it('reverts with a null start date', async function () {
     await expectRevert(
-      TokenVesting.new(owner, beneficiary, this.start, 0, 0, {
+      TokenVesting.new(owner, beneficiary, 0, {
         from: owner
-      }), 'TokenVesting: duration is 0'
-    );
-  });
-
-  it('reverts if the end time is in the past', async function () {
-    const now = await time.latest();
-
-    this.start = now.sub(this.duration).sub(time.duration.minutes(1));
-    await expectRevert(
-      TokenVesting.new(owner, beneficiary, this.start, this.cliffDuration, this.duration, {
-        from: owner
-      }),
-      'TokenVesting: final time is before current time'
+      }), 'TokenVesting: start date is zero'
     );
   });
 
@@ -80,7 +51,7 @@ contract("CulteVesting", async accounts => {
       });
 
       this.vesting = await TokenVesting.new(
-        this.token.address, beneficiary, this.start, this.cliffDuration, this.duration, {
+        this.token.address, beneficiary, this.start, {
           from: owner
         });
 
@@ -92,60 +63,45 @@ contract("CulteVesting", async accounts => {
 
     it('can get state', async function () {
       expect(await this.vesting.beneficiary()).to.equal(beneficiary);
-      expect(await this.vesting.cliff()).to.be.bignumber.equal(this.start.add(this.cliffDuration));
-      expect(await this.vesting.start()).to.be.bignumber.equal(this.start);
-      expect(await this.vesting.duration()).to.be.bignumber.equal(this.duration);
+      expect(await this.vesting.nextRelease()).to.be.bignumber.equal(this.start);
     });
 
-    it('cannot be released before cliff', async function () {
+    it('cannot be released before next release date', async function () {
       await expectRevert(this.vesting.release(),
-        'TokenVesting: no tokens are due'
+        'TokenVesting: no tokens available yet'
       );
     });
 
-    it('can be released after cliff', async function () {
-      await time.increaseTo(this.start.add(this.cliffDuration).add(time.duration.weeks(1)));
-      const { logs } = await this.vesting.release();
-      expectEvent.inLogs(logs, 'TokensReleased', {
-        amount: await this.token.balanceOf(beneficiary),
-      });
-    });
+    it('should release proper amount', async function () {
+      await time.increaseTo(this.start.add(time.duration.minutes(1)));
 
-    it('should release proper amount after cliff', async function () {
-      await time.increaseTo(this.start.add(this.cliffDuration));
+      let receipt = await this.vesting.release();
 
-      await this.vesting.release();
-      const releaseTime = await time.latest();
-
-      const releasedAmount = amount.mul(releaseTime.sub(this.start)).div(this.duration);
+      const releasedAmount = receipt.logs[0].args.amount;
       expect(await this.token.balanceOf(beneficiary)).to.be.bignumber.equal(releasedAmount);
       expect(await this.vesting.released()).to.be.bignumber.equal(releasedAmount);
     });
 
     it('should linearly release tokens during vesting period', async function () {
-      const vestingPeriod = this.duration.sub(this.cliffDuration);
-      const checkpoints = 4;
+      let now = this.start.add(time.duration.days(31));
+      let expectedVesting = new BN(0);
+      let shouldContinue = true;
 
-      for (let i = 1; i <= checkpoints; i++) {
-        const now = this.start.add(this.cliffDuration).add((vestingPeriod.muln(i).divn(checkpoints)));
+      while(shouldContinue) {
+        let vestingAmount = (await this.token.balanceOf(this.vesting.address)).toNumber();
+        if(vestingAmount == 0) {
+          break;
+        }
+        
+        now = now.add(time.duration.days(31));
         await time.increaseTo(now);
-
-        await this.vesting.release();
-        const expectedVesting = amount.mul(now.sub(this.start)).div(this.duration);
-        expect(await this.token.balanceOf(beneficiary)).to.be.bignumber.equal(expectedVesting);
+        
+        let receipt = await this.vesting.release();
+        expectedVesting = expectedVesting.add(new BN(receipt.logs[0].args.amount.toNumber()));
         expect(await this.vesting.released()).to.be.bignumber.equal(expectedVesting);
       }
-    });
-
-    it('should have released all after end', async function () {
-      await time.increaseTo(this.start.add(this.duration));
-      await this.vesting.release();
       expect(await this.token.balanceOf(beneficiary)).to.be.bignumber.equal(amount);
       expect(await this.vesting.released()).to.be.bignumber.equal(amount);
     });
-
-    function vestedAmount(total, now, start, cliffDuration, duration) {
-      return (now.lt(start.add(cliffDuration))) ? new BN(0) : total.mul((now.sub(start))).div(duration);
-    }
   });
 });

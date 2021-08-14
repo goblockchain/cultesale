@@ -23,6 +23,7 @@ contract CulteVesting is Ownable {
     using SafeERC20 for IERC20;
 
     event TokensReleased(uint256 amount);
+    event VestingRevoked();
 
     // beneficiary of tokens after they are released
     address public beneficiary;
@@ -30,8 +31,7 @@ contract CulteVesting is Ownable {
     IERC20 public token;
 
     // Durations and timestamps are expressed in UNIX time, the same units as now.
-    uint256 public cliff;
-    uint256 public start;
+    uint256 public nextRelease;
     uint256 public duration;
     uint256 public released;
 
@@ -41,22 +41,16 @@ contract CulteVesting is Ownable {
      * of the balance will have vested.
      * @param _token address of the token to be vested
      * @param _beneficiary address of the beneficiary to whom vested tokens are transferred
-     * @param _cliffDuration duration in seconds of the cliff in which tokens will begin to vest
      * @param _start the time (as Unix time) at which point vesting starts
-     * @param _duration duration in seconds of the period in which the tokens will vest
      */
-    constructor (IERC20 _token, address _beneficiary, uint256 _start, uint256 _cliffDuration, uint256 _duration) public {
-        require(_beneficiary != address(0), "TokenVesting: beneficiary is the zero address");
-        // solhint-disable-next-line max-line-length
-        require(_cliffDuration <= _duration, "TokenVesting: cliff is longer than duration");
-        require(_duration > 0, "TokenVesting: duration is 0");
-        // solhint-disable-next-line max-line-length
-        require(_start.add(_duration) > now, "TokenVesting: final time is before current time");
 
+    // Should transfer 147 milions of tokens right on the instantiation
+    constructor (IERC20 _token, address _beneficiary, uint256 _start) public {
+        // solhint-disable-next-line max-line-length
+        require(_beneficiary != address(0), "TokenVesting: beneficiary is the zero address");
+        require(_start > 0, "TokenVesting: start date is zero");
         beneficiary = _beneficiary;
-        duration = _duration;
-        cliff = _start.add(_cliffDuration);
-        start = _start;
+        nextRelease = _start;
         token = _token;
     }
 
@@ -64,13 +58,12 @@ contract CulteVesting is Ownable {
      * @notice Transfers vested tokens to beneficiary.
      */
     function release() public {
+        require(now >= nextRelease, "TokenVesting: no tokens available yet");
         uint256 unreleased = _releasableAmount();
-
         require(unreleased > 0, "TokenVesting: no tokens are due");
-
         released = released.add(unreleased);
-
         token.safeTransfer(beneficiary, unreleased);
+        _updateNextRelease();
 
         emit TokensReleased(unreleased);
     }
@@ -79,22 +72,38 @@ contract CulteVesting is Ownable {
      * @dev Calculates the amount that has already vested but hasn't been released yet.
      */
     function _releasableAmount() private view returns (uint256) {
-        return _vestedAmount().sub(released);
+        uint256 currentBalance = token.balanceOf(address(this));
+        //uint256 totalBalance = currentBalance.add(released);
+        uint256 amount = currentBalance.mul(2).div(10000);
+
+        if(amount > 0) {
+            return amount;
+        }
+        return currentBalance;
     }
 
     /**
-     * @dev Calculates the amount that has already vested.
-     */
-    function _vestedAmount() private view returns (uint256) {
-        uint256 currentBalance = token.balanceOf(address(this));
-        uint256 totalBalance = currentBalance.add(released);
-
-        if (now < cliff) {
-            return 0;
-        } else if (now >= start.add(duration)) {
-            return totalBalance;
-        } else {
-            return totalBalance.mul(now.sub(start)).div(duration);
-        }
+    * @dev Updates the next release date to be after 31 days past
+    */
+    function _updateNextRelease() private {
+        nextRelease = nextRelease + 31 days;
     }
+
+    /**
+     * @notice Allows the owner to revoke the vesting. Tokens already vested
+     * remain in the contract, the rest are returned to the owner.
+     */
+    /*
+    function revoke() public onlyOwner {
+
+        uint256 balance = token.balanceOf(address(this));
+
+        uint256 unreleased = _releasableAmount();
+        uint256 refund = balance.sub(unreleased);
+
+        token.transfer(owner(), refund);
+
+        emit VestingRevoked();
+    }
+    */
 }

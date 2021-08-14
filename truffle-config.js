@@ -49,10 +49,10 @@ module.exports = {
       network_id: "*",       // Any network (default: none)
     },
     rinkeby: {
-      provider: () => new HDWalletProvider(mnemonic, `https://rinkeby.infura.io/v3/ce826cf83e234cd3bc9697b4a8fe1f4a`),
+      provider: () => new HDWalletProvider(mnemonic, `https://rinkeby.infura.io/v3/d58e9b158278455c958a30b7ccf7a9ea`),
       network_id: 4,
-      confirmations: 2,
-      timeoutBlocks: 200,
+      confirmations: 1,
+      timeoutBlocks: 200000000000,
       skipDryRun: true
     },
     // Another network with more advanced options...

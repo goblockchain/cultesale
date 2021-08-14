@@ -5,53 +5,51 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/ownership/Ownable.sol";
 import "../interfaces/BadERC20.sol";
 import "../interfaces/Medianizer.sol";
+import "../CulteToken.sol";
 import "../vesting/CulteVesting.sol";
 import "./Structs.sol";
+import "./BinanceCotationOracle.sol";
 
 /**
  * @title CLT tokens sale contract
  * @notice This contract is used to sell CLT tokens (accepts BNB and DAI) at a fixed USD price
  */
-contract CulteSale is Ownable, CulteVesting {
+contract CulteSale is Ownable {
 
     using SafeMath for uint256;
 
-    ERC20 public CLT;
-
+    IERC20 public CLT;
+    BinanceCotationOracle private binanceOracle;
     address payable public wallet;
-    uint public startDate;
-    uint public endDate;
+    uint256 public startDate;
+    uint256 public endDate;
     bool public postponed = false;
+    uint256 public soldAmount;
 
     Structs.Phase[] private phases;
     Structs.Bonus[] private bonus;
 
     /**
      * @notice Initializes the contract
-     * @param _culteTokenContractAddress The address of the CLT token contract
+     * @param _culteTokenAddress the address of the token
      * @param _initialWallet the address of the wallet that will receive the funds
      * @param _startDate the sale start date
+     * @param _binanceOracle the cotation oracle
      */
     constructor(
-        address _culteTokenContractAddress,
+        address _culteTokenAddress, 
         address payable _initialWallet,
-        uint _startDate
-    )
-    public
-    CulteVesting(
-        IERC20(_culteTokenContractAddress), // (_token) Address of the token to be vested
-        _initialWallet,                     // (_beneficiary) Address of the beneficiary to whom vested tokens are transferred
-        now,                                // (_start) The time (as Unix time) at which point vesting starts
-        139 days,                           // (_cliffDuration) Duration in seconds of the cliff in which tokens will begin to vest
-        30 * 100 days                       // (_duration) Duration in seconds of the period in which the tokens will vest
-    )
-    {
+        uint _startDate, 
+        address _binanceOracle
+    ) public {
         require(_initialWallet != address(0), "need a wallet to receive funds");
 
-        CLT = ERC20(_culteTokenContractAddress);
+        CLT = ERC20(_culteTokenAddress);
         wallet = _initialWallet;
         startDate = _startDate;
         endDate = _startDate + 139 days;
+
+        binanceOracle = BinanceCotationOracle(_binanceOracle);
 
         setSalePhases();
         setBonus();
@@ -84,9 +82,9 @@ contract CulteSale is Ownable, CulteVesting {
         uint256 start2 = startDate + 92 days;   // 11/16 to 12/31 U$ 0,10 => 45 days
         uint256 salesEnd = startDate + 136 days;// 01/01/2022 => sales ending
 
-        phases.push(Structs.Phase(start0, start1, 15*10**13, 21*10**6, 0));
-        phases.push(Structs.Phase(start1, start2, 22*10**13, 21*10**6, 0));
-        phases.push(Structs.Phase(start2, salesEnd, 31*10**13, 42*10**6, 0));
+        phases.push(Structs.Phase(start0, start1, 5));
+        phases.push(Structs.Phase(start1, start2, 7));
+        phases.push(Structs.Phase(start2, salesEnd, 10));
     }
 
     /**
@@ -128,7 +126,12 @@ contract CulteSale is Ownable, CulteVesting {
 
         address(wallet).transfer(msg.value);
 
-        emit CLTBought(_to, culteAmount, bonusAmount, _salePhase.price);
+        emit CLTBought(
+            _to, 
+            culteAmount, 
+            bonusAmount,
+            binanceOracle.getCurrentCentAsBnb().mul(_salePhase.timesPrice)
+        );
     }
 
     /**
@@ -136,22 +139,17 @@ contract CulteSale is Ownable, CulteVesting {
      * @param _bnbAmount An amount of BNB to calculate
      * @return The amount of CLT
      */
-    function getCulteAmount(uint256 _bnbAmount, Structs.Phase memory _salesPhase) public pure returns (uint256) {
+    function getCulteAmount(uint256 _bnbAmount, Structs.Phase memory _salesPhase) public returns (uint256) {
 
-        uint256 tokenPrice = _salesPhase.price;
+        uint256 tokenPrice = binanceOracle.getCurrentCentAsBnb().mul(_salesPhase.timesPrice);
         uint256 quantity = SafeMath.div(_bnbAmount, tokenPrice);
 
         // check for tokens in saleSupply existance
-        require(quantity > 0, "Quantity of calculated tokens should be greater than ");
-        require(
-            quantity <= SafeMath.sub(_salesPhase.saleSupply, _salesPhase.amountSold),
-            "No more tokens available to be  bougth"
-        );
+        require(quantity > 0, "Quantity of calculated tokens should be greater than zero");
+        require(quantity <= CLT.balanceOf(address(this)), "No more tokens available to be  bougth");
 
         // Updates the amount sold
-        _salesPhase.amountSold = SafeMath.add(_salesPhase.amountSold, quantity);
-        // updates the sale supply
-        _salesPhase.saleSupply = SafeMath.sub(_salesPhase.saleSupply, quantity);
+        soldAmount = soldAmount.add(quantity);
 
         return quantity;
     }
@@ -169,15 +167,6 @@ contract CulteSale is Ownable, CulteVesting {
         uint256 mult = _cltAmount.mul(currentBonus);
 
         return mult.div(100);
-    }
-
-    /**
-     * @notice Gets the Total tokens sold
-     * @return The total as an uint256
-     */
-    function getTotalTokensSold() public view returns (uint256 total) {
-        for (uint i = 0; i < phases.length; i++)
-            total += total.add(phases[i].amountSold);
     }
 
     /**

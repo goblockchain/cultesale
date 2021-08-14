@@ -18,7 +18,7 @@ contract CulteToken is ERC20 {
      * @dev Constructor, mints all tokens to deployer.
      */
     constructor() public {
-        _mint(msg.sender, 21*10**(7 + 18)); //210 million
+        _mint(msg.sender, 210000000); //210 million
     }
 
     /**

@@ -5,9 +5,7 @@ contract Structs {
     struct Phase {
         uint256 start;
         uint256 end;
-        uint256 price;
-        uint256 saleSupply;
-        uint256 amountSold;
+        uint256 timesPrice;
     }
 
     struct Bonus {

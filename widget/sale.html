@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Culte Sale Widget</title>
+    <link rel="stylesheet" href="https://unpkg.com/picnic">
+</head>
+
+<body style="margin: 10%;">
+    <h1>Buy Now</h1>
+
+    <form>
+        <label><input id="val" type="number" placeholder="Amount to buy"></label>
+        <br><br>
+        <select id="curr">
+            <option>Select currency</option>
+            <option value="BNB">BNB (Bincance Coin)</option>
+        </select>
+        <br><br>
+        <button type="button" id="buy" style="width: 100%;">Buy</button>
+
+    </form>
+    <script src="https://cdn.ethers.io/scripts/ethers-v4.min.js" charset="utf-8" type="text/javascript"></script>
+    <script>
+        const desiredNetwork = '4' // '1' is the Ethereum main network ID, 4 is Rinkeby
+        const culteSaleAddress = "0x6041Cc91e2245Bd452e027b690B16FE41159382b" // UPDATE, this is pointing to Rinkeby
+
+        // Detect whether the current browser is ethereum-compatible,
+        // and handle the case where it isn't:
+        if (typeof window.ethereum === 'undefined') {
+            alert(
+                'You need an Ethereum compatible browser, we recommend Metamask (works with your browser of choice) or Opera.'
+            )
+        } else {
+
+            // In the case the user has MetaMask installed, you can easily
+            // ask them to sign in and reveal their accounts:
+            ethereum.enable()
+
+                // Remember to handle the case they reject the request:
+                .catch(function (reason) {
+                    // This shouldn't happen, so you might want to log this...
+                    alert('There was an issue signing you in.')
+                })
+
+                // In the case they approve the log-in request, you'll receive their accounts:
+                .then(function (accounts) {
+                    // You also should verify the user is on the correct network:
+                    if (ethereum.networkVersion !== desiredNetwork) {
+                        alert('This application requires the main network, please switch it in your MetaMask UI.')
+                    }
+                })
+        }
+
+        document.getElementById('buy').addEventListener('click', function () {
+            const value = document.getElementById("val").value;
+            const curr = document.getElementById("curr").value;
+
+            if (value == 0) {
+                alert("Please select an amount to buy.")
+                return
+            }
+
+            if (curr == "Select currency") {
+                alert("Please select a currency.")
+                return
+            }
+
+            BuyCulte(value, curr, function (err, transaction) {
+                if (err) {
+                    return alert(`Sorry you weren't able to buy! Please contact us for support.`)
+                }
+
+                alert('Thanks for buying!')
+            })
+
+        });
+
+        async function BuyCulte(value, currency, callback) {
+
+            let provider = new ethers.providers.Web3Provider(web3.currentProvider);
+            var signer = provider.getSigner();
+            let account = await signer.getAddress();
+            let abi = [
+                "function buyCulteWithBnb(address to) public payable",
+            ];
+            let CulteSaleContract = new ethers.Contract(culteSaleAddress, abi, signer);
+
+            console.log(await signer.getAddress());
+            if (currency == "BNB") {
+                let tx;
+                try {
+                    tx = await CulteSaleContract.buyCulteWithBnb(account, {
+                        value: ethers.utils.parseEther(value)
+                    });
+                } catch (err) {
+                    alert(err.data.message);
+                }
+                let receipt = await tx.wait(1)
+                if (receipt.status == 1) alert("Purchase confirmed, thank you!")
+            } 
+        }
+    </script>
+</body>
+
+</html>
