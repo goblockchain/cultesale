@@ -6,7 +6,7 @@
  *Submitted for verification at Etherscan.io on 2018-04-16
  */
 
-pragma solidity ^0.5.0;
+pragma solidity >=0.5.0 <=0.5.9;
 
 ////// lib/ds-math/src/math.sol
 /// math.sol -- mixin for inline numerical wizardry

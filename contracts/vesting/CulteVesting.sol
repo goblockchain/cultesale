@@ -89,21 +89,4 @@ contract CulteVesting is Ownable {
         nextRelease = nextRelease + 31 days;
     }
 
-    /**
-     * @notice Allows the owner to revoke the vesting. Tokens already vested
-     * remain in the contract, the rest are returned to the owner.
-     */
-    /*
-    function revoke() public onlyOwner {
-
-        uint256 balance = token.balanceOf(address(this));
-
-        uint256 unreleased = _releasableAmount();
-        uint256 refund = balance.sub(unreleased);
-
-        token.transfer(owner(), refund);
-
-        emit VestingRevoked();
-    }
-    */
 }

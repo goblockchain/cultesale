@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity >=0.5.0 <=0.5.9;
 
 interface ICulteDeposit {
     function tentacles(address tentacle) external returns (string memory);

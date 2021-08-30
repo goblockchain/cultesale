@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity >=0.5.0 <=0.5.9;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./interfaces/Tentacle.sol";
@@ -10,8 +10,8 @@ import "./interfaces/Tentacle.sol";
  * There are no ownership, admin or minting functions after the creation
  */
 contract CulteToken is ERC20 {
-    string public constant name = "CulteToken";
-    string public constant symbol = "CLT";
+    string public constant name = "Cultecoin";
+    string public constant symbol = "CULTE";
     uint256 public constant decimals = 18;
 
     /**

@@ -1,6 +1,6 @@
 const CulteToken = artifacts.require("CulteToken");
 
 module.exports = async (deployer, network, accounts) => {
-  const owner = accounts[5];//'0x5d529F1cB746a7f2bc24459385394Fb8F52DE55A'  
-  deployer.deploy( CulteToken, { from: owner });
+  //const owner = '0xe5cB5A6390784FF6c4aE1054b02F8d32D349D27B';
+  await deployer.deploy(CulteToken);
 };

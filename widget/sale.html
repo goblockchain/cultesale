@@ -8,13 +8,14 @@
 
 <body style="margin: 10%;">
     <h1>Buy Now</h1>
-
+    <h2>BUSD Contract: <a href="https://testnet.bscscan.com/address/0xed24fc36d5ee211ea25a80239fb8c4cfd80f12ee">0xed24fc36d5ee211ea25a80239fb8c4cfd80f12ee</a></h2>
+    <h2>Sale Contract: <a href="https://testnet.bscscan.com/address/0x7c7136b6ED039319E9a983F780DeF9660703C260">0x7c7136b6ED039319E9a983F780DeF9660703C260</a></h2>
     <form>
         <label><input id="val" type="number" placeholder="Amount to buy"></label>
         <br><br>
         <select id="curr">
             <option>Select currency</option>
-            <option value="BNB">BNB (Bincance Coin)</option>
+            <option value="BUSD">BUSD (Binance USD)</option>
         </select>
         <br><br>
         <button type="button" id="buy" style="width: 100%;">Buy</button>
@@ -22,8 +23,8 @@
     </form>
     <script src="https://cdn.ethers.io/scripts/ethers-v4.min.js" charset="utf-8" type="text/javascript"></script>
     <script>
-        const desiredNetwork = '4' // '1' is the Ethereum main network ID, 4 is Rinkeby
-        const culteSaleAddress = "0x6041Cc91e2245Bd452e027b690B16FE41159382b" // UPDATE, this is pointing to Rinkeby
+        const desiredNetwork = '97' // '1' is the bsc main network ID, 4 is Rinkeby
+        const culteSaleAddress = "0x7c7136b6ED039319E9a983F780DeF9660703C260" // UPDATE, this is pointing to Rinkeby
 
         // Detect whether the current browser is ethereum-compatible,
         // and handle the case where it isn't:
@@ -82,23 +83,22 @@
             var signer = provider.getSigner();
             let account = await signer.getAddress();
             let abi = [
-                "function buyCulteWithBnb(address to) public payable",
+                "function buyCulteWithBusd(uint256 _amount) public"
             ];
             let CulteSaleContract = new ethers.Contract(culteSaleAddress, abi, signer);
 
             console.log(await signer.getAddress());
-            if (currency == "BNB") {
+            if(currency == "BUSD") {
                 let tx;
                 try {
-                    tx = await CulteSaleContract.buyCulteWithBnb(account, {
-                        value: ethers.utils.parseEther(value)
-                    });
+                    tx = await CulteSaleContract.buyCulteWithBusd(value);
                 } catch (err) {
+                    console.log(err);
                     alert(err.data.message);
                 }
                 let receipt = await tx.wait(1)
                 if (receipt.status == 1) alert("Purchase confirmed, thank you!")
-            } 
+            }
         }
     </script>
 </body>

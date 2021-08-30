@@ -1,14 +1,13 @@
-pragma solidity ^0.5.0;
+pragma solidity >=0.5.0 <=0.5.9;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/ownership/Ownable.sol";
-import "../interfaces/BadERC20.sol";
-import "../interfaces/Medianizer.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "../interfaces/IBEP20.sol";
 import "../CulteToken.sol";
 import "../vesting/CulteVesting.sol";
 import "./Structs.sol";
-import "./BinanceCotationOracle.sol";
 
 /**
  * @title CLT tokens sale contract
@@ -19,10 +18,11 @@ contract CulteSale is Ownable {
     using SafeMath for uint256;
 
     IERC20 public CLT;
-    BinanceCotationOracle private binanceOracle;
+    IBEP20 public BUSD;
+
     address payable public wallet;
     uint256 public startDate;
-    uint256 public endDate;
+    // uint256 public endDate;
     bool public postponed = false;
     uint256 public soldAmount;
 
@@ -34,22 +34,20 @@ contract CulteSale is Ownable {
      * @param _culteTokenAddress the address of the token
      * @param _initialWallet the address of the wallet that will receive the funds
      * @param _startDate the sale start date
-     * @param _binanceOracle the cotation oracle
      */
     constructor(
         address _culteTokenAddress, 
         address payable _initialWallet,
         uint _startDate, 
-        address _binanceOracle
+        address _busdTokenAddress
     ) public {
         require(_initialWallet != address(0), "need a wallet to receive funds");
 
         CLT = ERC20(_culteTokenAddress);
+        BUSD = IBEP20(_busdTokenAddress);
         wallet = _initialWallet;
         startDate = _startDate;
-        endDate = _startDate + 139 days;
-
-        binanceOracle = BinanceCotationOracle(_binanceOracle);
+        // endDate = _startDate + 139 days;
 
         setSalePhases();
         setBonus();
@@ -59,9 +57,7 @@ contract CulteSale is Ownable {
      * @notice Modifier checks if sale is currently active
      */
     modifier onlyWhileOpen() {
-        uint256 _start = startDate;
-        uint256 _end = endDate;
-        require(now >= _start && now <= _end, "Sale has not started yet");
+        require(now >= startDate, "Sale has not started yet");
         _;
     }
 
@@ -102,47 +98,46 @@ contract CulteSale is Ownable {
     }
 
     /**
-     * @notice Postpones the sale for 30 additional days
+     * @notice Buy CLT tokens with BUSD
+     * @param _amount The amount of CLT to be bought
      */
-    function postponeSale() public onlyOwner {
-        endDate = endDate + 30 days;
-    }
+    function buyCulteWithBusd(uint256 _amount) public onlyWhileOpen {
+        require(_amount <= BUSD.balanceOf(msg.sender), "You do not have sufficient ballance to transfer this amount");
+        require(
+            BUSD.transferFrom(msg.sender, address(this), _amount),
+            "BUSD Transfer did not succeed, have you approved the transfer in the contract?"
+        );
+        require(BUSD.transfer(wallet, _amount), "BUSD Transfer to wallet failed");
 
-    /**
-     * @notice Buys CLT tokens with BNB
-     * @param _to The address that will receive the CLT
-     */
-    function buyCulteWithBnb(address _to) public payable onlyWhileOpen {
         Structs.Phase memory _salePhase = getCurrentPhase();
-        uint256 culteAmount = getCulteAmount(msg.value, _salePhase);
+
+        uint256 centInBusd = 1*10**16;
+        uint256 tokenPrice = centInBusd.mul(_salePhase.timesPrice);
+
+        _amount = _amount*10**18;
+        uint256 culteAmount = getCulteAmountWithBusd(_amount, tokenPrice);
         uint256 bonusAmount = applyBonus(culteAmount);
         uint256 totalCulte = culteAmount;
         totalCulte = totalCulte.add(bonusAmount);
 
-        require(
-            CLT.transfer(_to, totalCulte),
-            "CLT Transfer failed"
-        );
-
-        address(wallet).transfer(msg.value);
+        require(CLT.transfer(msg.sender, totalCulte), "CLT Transfer failed");
 
         emit CLTBought(
-            _to, 
-            culteAmount, 
+            msg.sender,
+            culteAmount,
             bonusAmount,
-            binanceOracle.getCurrentCentAsBnb().mul(_salePhase.timesPrice)
+            centInBusd.mul(_salePhase.timesPrice)
         );
     }
 
     /**
      * @notice Returns the amount of CLT that can be bought using a specific amount of $USD
-     * @param _bnbAmount An amount of BNB to calculate
+     * @param _busdAmount An amount of BUSD to calculate
      * @return The amount of CLT
      */
-    function getCulteAmount(uint256 _bnbAmount, Structs.Phase memory _salesPhase) public returns (uint256) {
+    function getCulteAmountWithBusd(uint256 _busdAmount, uint256 _tokenPrice) public returns (uint256) {
 
-        uint256 tokenPrice = binanceOracle.getCurrentCentAsBnb().mul(_salesPhase.timesPrice);
-        uint256 quantity = SafeMath.div(_bnbAmount, tokenPrice);
+        uint256 quantity = SafeMath.div(_busdAmount, _tokenPrice);
 
         // check for tokens in saleSupply existance
         require(quantity > 0, "Quantity of calculated tokens should be greater than zero");
@@ -179,12 +174,13 @@ contract CulteSale is Ownable {
 
             uint256 _start = phases[i].start;
             uint256 _end = phases[i].end;
+            uint256 _now = now;
 
-            if(now >= _start && now <= _end) {
+            if(_now >= _start && _now <= _end) {
                 return phases[i];
             }
         }
-        return phases[0];
+        return phases[2];
     }
 
     /**
@@ -199,12 +195,5 @@ contract CulteSale is Ownable {
             }
         }
         return bonus[0].percent;
-    }
-
-    /**
-     * @notice Fallback - Buys CLT with msg.value
-     */
-    function() external payable {
-        buyCulteWithBnb(msg.sender);
     }
 }
