@@ -114,7 +114,6 @@ contract CulteSale is Ownable {
         uint256 centInBusd = 1*10**16;
         uint256 tokenPrice = centInBusd.mul(_salePhase.timesPrice);
 
-        _amount = _amount*10**18;
         uint256 culteAmount = getCulteAmountWithBusd(_amount, tokenPrice);
         uint256 bonusAmount = applyBonus(culteAmount);
         uint256 totalCulte = culteAmount;
