@@ -14,7 +14,7 @@ module.exports = async (deployer, network, accounts) => {
   );
 
   let vesting = await TeamVesting.deployed();
-  await token.transfer(TeamVesting.address, 21000000);
+  // await token.transfer(TeamVesting.address, web3.utils.toWei("21000000", "ether"));
   await vesting.transferOwnership(owner);
 };
 

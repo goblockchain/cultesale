@@ -5,6 +5,7 @@ const {
   expectRevert,
   time
 } = require('@openzeppelin/test-helpers');
+const { web3 } = require('@openzeppelin/test-helpers/src/setup');
 const {
   ZERO_ADDRESS
 } = constants;
@@ -17,7 +18,7 @@ const CulteToken = artifacts.require('CulteToken');
 const TeamVesting = artifacts.require('TeamVesting');
 
 contract("TeamVesting", async accounts => {
-  const amount = new BN('4200010');
+  const amount = await web3.utils.toWei('4200010');
   const beneficiary = accounts[1];
   const owner = accounts[2];
 
@@ -79,11 +80,10 @@ contract("TeamVesting", async accounts => {
       let receipt = await this.vesting.release();
 
       const releasedAmount = receipt.logs[0].args.amount;
-      const firstReleaseAmount = new BN('4200000');      
-      expect(await this.token.balanceOf(beneficiary)).to.be.bignumber.equal(firstReleaseAmount);
-      expect(await this.token.balanceOf(beneficiary)).to.be.bignumber.equal(firstReleaseAmount);
-      expect(await this.token.balanceOf(this.vesting.address)).to.be.bignumber.equal(new BN(amount - firstReleaseAmount));
-      expect(await this.vesting.released()).to.be.bignumber.equal(releasedAmount);
+      const firstReleaseAmount = await web3.utils.toWei('4200000');   
+      
+      expect(await this.token.balanceOf(beneficiary), "Beneficiary balance is not correct").to.be.bignumber.equal(firstReleaseAmount);
+      expect(await this.vesting.released(), "Relesed amount is not correct").to.be.bignumber.equal(releasedAmount);
     });
 
     it('should linearly release tokens during vesting period', async function () {
@@ -92,8 +92,8 @@ contract("TeamVesting", async accounts => {
       let shouldContinue = true;
 
       while(shouldContinue) {
-        let vestingAmount = (await this.token.balanceOf(this.vesting.address)).toNumber();
-        if(vestingAmount == 0) {
+        let vestingAmount = (await this.token.balanceOf(this.vesting.address));
+        if(vestingAmount.toString() == "0") {
           break;
         }
         
@@ -101,7 +101,7 @@ contract("TeamVesting", async accounts => {
         await time.increaseTo(now);
         
         let receipt = await this.vesting.release();
-        expectedVesting = expectedVesting.add(new BN(receipt.logs[0].args.amount.toNumber()));
+        expectedVesting = expectedVesting.add(new BN(receipt.logs[0].args.amount.toString()));
         expect(await this.vesting.released()).to.be.bignumber.equal(expectedVesting);
       }
       expect(await this.token.balanceOf(beneficiary)).to.be.bignumber.equal(amount);

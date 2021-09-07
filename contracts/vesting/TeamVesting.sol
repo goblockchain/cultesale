@@ -54,6 +54,7 @@ contract TeamVesting is Ownable {
         require(firstRelease || now >= nextRelease, "TeamVesting: no tokens available yet");
         uint256 unreleased = releasableAmount();
         require(unreleased > 0, "TeamVesting: no tokens are due");
+        unreleased = unreleased*10**18;
         released = released.add(unreleased);
         token.safeTransfer(beneficiary, unreleased);
 
@@ -75,6 +76,7 @@ contract TeamVesting is Ownable {
      */
     function vestedAmount() public returns (uint256) {
         uint256 currentBalance = token.balanceOf(address(this));
+        currentBalance = SafeMath.div(currentBalance, 10**18);
 
         if(firstRelease) {
             firstRelease = false;

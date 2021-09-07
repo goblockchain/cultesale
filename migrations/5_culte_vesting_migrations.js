@@ -13,8 +13,8 @@ module.exports = async (deployer, network, accounts) => {
     Math.floor(Date.now() / 1000)
   );
 
-  //let vesting = await CulteVesting.deployed();
-  await token.transfer(CulteVesting.address, 147000000);
-  //await vesting.transferOwnership(owner);
+  let vesting = await CulteVesting.deployed();
+  // await token.transfer(CulteVesting.address, web3.utils.toWei("21000000", "ether"));
+  await vesting.transferOwnership(owner);
 };
 

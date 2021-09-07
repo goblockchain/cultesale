@@ -59,8 +59,10 @@ contract CulteVesting is Ownable {
      */
     function release() public {
         require(now >= nextRelease, "TokenVesting: no tokens available yet");
+        require(beneficiary != address(0), "TokenVesting: beneficiary is the zero address");
         uint256 unreleased = _releasableAmount();
         require(unreleased > 0, "TokenVesting: no tokens are due");
+        unreleased = unreleased*10**18;
         released = released.add(unreleased);
         token.safeTransfer(beneficiary, unreleased);
         _updateNextRelease();
@@ -74,7 +76,8 @@ contract CulteVesting is Ownable {
     function _releasableAmount() private view returns (uint256) {
         uint256 currentBalance = token.balanceOf(address(this));
         //uint256 totalBalance = currentBalance.add(released);
-        uint256 amount = currentBalance.mul(2).div(10000);
+        currentBalance = SafeMath.div(currentBalance, 10**18);
+        uint256 amount = currentBalance.mul(2).div(100);
 
         if(amount > 0) {
             return amount;
