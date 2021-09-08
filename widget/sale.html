@@ -8,8 +8,8 @@
 
 <body style="margin: 10%;">
     <h1>Buy Now</h1>
-    <h2>BUSD Contract: <a href="https://testnet.bscscan.com/address/0x8Ed1A05E81274c14fF2Bb4BF8FC24ed8AB06FDc5">0x8Ed1A05E81274c14fF2Bb4BF8FC24ed8AB06FDc5</a></h2>
-    <h2>Sale Contract: <a href="https://testnet.bscscan.com/address/0x76dA55947063b8f977533219a2Aaa30E0F072896">0x76dA55947063b8f977533219a2Aaa30E0F072896</a></h2>
+    <h2>BUSD Contract: <a href="https://testnet.bscscan.com/address/0xf27A54452068bD575f5fc3c319a2a15A33D3227B">0xf27A54452068bD575f5fc3c319a2a15A33D3227B</a></h2>
+    <h2>Sale Contract: <a href="https://testnet.bscscan.com/address/0x428b4c0DBcE70BCfC2Dcf941cB4EB253a6eCfD62">0x428b4c0DBcE70BCfC2Dcf941cB4EB253a6eCfD62</a></h2>
     <form>
         <label><input id="val" type="number" placeholder="Amount to buy"></label>
         <br><br>
@@ -26,8 +26,8 @@
     <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
     <script>
         const desiredNetwork = '97' // '1' is the bsc main network ID, 4 is Rinkeby
-        const culteSaleAddress = "0x76dA55947063b8f977533219a2Aaa30E0F072896" // UPDATE, this is pointing to Rinkeby
-        const busdAddress = "0x8Ed1A05E81274c14fF2Bb4BF8FC24ed8AB06FDc5";
+        const culteSaleAddress = "0x428b4c0DBcE70BCfC2Dcf941cB4EB253a6eCfD62" // UPDATE, this is pointing to Rinkeby
+        const busdAddress = "0xf27A54452068bD575f5fc3c319a2a15A33D3227B";
 
         // Detect whether the current browser is ethereum-compatible,
         // and handle the case where it isn't:
@@ -86,7 +86,7 @@
             var signer = provider.getSigner();
             let account = await signer.getAddress();
             let abi = [
-                "function buyCulteWithBusd(uint256 _amount, uint256 _exp) public"
+                "function buyCulteWithBusd(uint256 _amount) public"
             ];
             let abiBUSD = [
                 "function approve(address spender, uint256 amount) external returns (bool)"
@@ -98,21 +98,16 @@
             if(currency == "BUSD") {
                 let tx;
                 let tx1;
+                let receipt;
                 try {
                     tx1 = await BUSDContract.approve(culteSaleAddress, Web3.utils.toWei(""+value, "ether"));
-                    let _decimalPlaces = decimalPlaces(value);
-                    let _number = numberWithoutDecimal(value);
-                    if(_decimalPlaces > 0) {
-                        tx = await CulteSaleContract.buyCulteWithBusd(_number, _decimalPlaces);
-                    } else {
-                        tx = await CulteSaleContract.buyCulteWithBusd(Web3.utils.toWei(""+value, "ether"), 0);
-                    }
+                    await tx1.wait(1);
+                    tx = await CulteSaleContract.buyCulteWithBusd(Web3.utils.toWei(""+value, "ether"));
+                    receipt = await tx.wait(1);
                 } catch (err) {
                     console.log(err);
                     alert(err.data.message);
                 }
-                await tx1.wait(1);
-                let receipt = await tx.wait(1);
                 if (receipt.status == 1) alert("Purchase confirmed, thank you!")
             }
         }

@@ -75,13 +75,13 @@ contract CulteSale is Ownable {
     function setSalePhases() private {
 
         uint256 start0 = startDate;             // 08/15 to 09/30 U$ 0,05 => 46 days
-        // uint256 start1 = startDate + 1 days;   // 10/01 to 11/15 U$ 0,07 => 45 days
-        // uint256 start2 = startDate + 2 days;   // 11/16 to 12/31 U$ 0,10 => 45 days
-        // uint256 salesEnd = startDate + 3 days;// 01/01/2022 => sales ending
+        uint256 start1 = startDate + 1 days;   // 10/01 to 11/15 U$ 0,07 => 45 days
+        uint256 start2 = startDate + 2 days;   // 11/16 to 12/31 U$ 0,10 => 45 days
+        uint256 salesEnd = startDate + 3 days;// 01/01/2022 => sales ending
 
-        uint256 start1 = startDate + 47 days;   // 10/01 to 11/15 U$ 0,07 => 45 days
-        uint256 start2 = startDate + 92 days;   // 11/16 to 12/31 U$ 0,10 => 45 days
-        uint256 salesEnd = startDate + 136 days;// 01/01/2022 => sales ending
+        // uint256 start1 = startDate + 47 days;   // 10/01 to 11/15 U$ 0,07 => 45 days
+        // uint256 start2 = startDate + 92 days;   // 11/16 to 12/31 U$ 0,10 => 45 days
+        // uint256 salesEnd = startDate + 136 days;// 01/01/2022 => sales ending
 
         phases.push(Structs.Phase(start0, start1, 5));
         phases.push(Structs.Phase(start1, start2, 7));
@@ -106,31 +106,21 @@ contract CulteSale is Ownable {
      * @notice Buy CLT tokens with BUSD
      * @param _amount The amount of CLT to be bought
      */
-    function buyCulteWithBusd(uint256 _amount, uint256 _exp) public onlyWhileOpen {
-        uint256 busdTransferAmount = _amount;
-        if(_exp > 0) { 
-            busdTransferAmount = SafeMath.mul(_amount, 10*10**(SafeMath.sub(17, _exp)));
-        }
-
+    function buyCulteWithBusd(uint256 _amount) public onlyWhileOpen {
         require(_amount <= BUSD.balanceOf(msg.sender), "You do not have sufficient ballance to transfer this amount");
         require(
-            BUSD.transferFrom(msg.sender, address(this), busdTransferAmount),
+            BUSD.transferFrom(msg.sender, address(this), _amount),
             "BUSD Transfer did not succeed, have you approved the transfer in the contract?"
         );
-        require(BUSD.transfer(wallet, busdTransferAmount), "BUSD Transfer to wallet failed");
+        require(BUSD.transfer(wallet, _amount), "BUSD Transfer to wallet failed");
 
         Structs.Phase memory _salePhase = getCurrentPhase();
 
         uint256 tokenPrice = _salePhase.timesPrice;//*10**16;
         uint256 culteAmount;
 
-        if(_exp >= 2) {
-            _exp = _exp - 2;
-            culteAmount = getCulteAmountWithFractionedBusd(_amount, _exp, tokenPrice);
-        } else {
-            tokenPrice = tokenPrice*10**16;
-            culteAmount = getCulteAmountWithBusd(_amount, tokenPrice);
-        }
+        tokenPrice = tokenPrice*10**16;
+        culteAmount = getCulteAmountWithBusd(_amount, tokenPrice);
         
         require(CLT.transfer(msg.sender, culteAmount), "CLT Transfer failed");
 
@@ -159,26 +149,6 @@ contract CulteSale is Ownable {
         culteAmount = SafeMath.add(culteAmount, bonusAmount);
         soldAmount = SafeMath.add(soldAmount, culteAmount);
         return SafeMath.mul(culteAmount, 10*10**17);
-    }
-
-        /**
-     * @notice Returns the amount of CLT that can be bought using a specific amount of $USD
-     * @param _busdAmount An amount of BUSD to calculate
-     * @return The amount of CLT
-     */
-    function getCulteAmountWithFractionedBusd(uint256 _busdAmount, uint256 _exp, uint256 _tokenPrice) public returns (uint256) {
-
-        uint256 culteAmount = SafeMath.div(_busdAmount, _tokenPrice);
-
-        require(culteAmount > 0, "Quantity of calculated tokens should be greater than zero");
-        require(culteAmount >= 1000, "Offer starts on 1000 CULTE");
-        require(culteAmount <= CLT.balanceOf(address(this)), "No more tokens available to be  bougth");
-
-        // Updates the amount sold
-        uint256 bonusAmount = applyBonus(culteAmount);
-        culteAmount = SafeMath.add(culteAmount, bonusAmount);
-        soldAmount = SafeMath.add(soldAmount, culteAmount);
-        return SafeMath.mul(culteAmount, 10*10**(SafeMath.sub(17, _exp)));
     }
 
     /**
