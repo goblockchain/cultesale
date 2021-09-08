@@ -82,13 +82,12 @@ contract TeamVesting is Ownable {
             firstRelease = false;
             return 4200000;
         } else if(now >= nextRelease) { // now >= 01/04/22
-            if(currentBalance.mul(10000).div(10000) == currentBalance) {
-                uint256 percentage = currentBalance.mul(2).div(10000);
-                if(percentage > 0) {
-                    return percentage;
-                }
+            uint256 percentage = currentBalance.mul(2).div(100);
+            if(percentage > 0) {
+                return percentage;
+            } else if(percentage == 0 && currentBalance > 0) {
+                return currentBalance;
             }
-            return currentBalance;
         }
     }
 

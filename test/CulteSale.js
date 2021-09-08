@@ -147,16 +147,15 @@ contract("CulteSale", async accounts => {
         assert.equal(210000000, walletBalance, "Wallet balance is not correct after sales close");
         assert.equal(0, salesBalance, "Sale balance is not correct after sales close");
     });
-/*
-    it.only("Should apply for offer 1 - 50.025 (BUSD) => 1000.5 tokens", async () => {
+
+    it("Should apply for offer 1 - 4013 (BUSD) => 83470,4 tokens", async () => {
 
         let myDate = new Date();
         myDate = myDate.setDate(myDate.getDate() - 100);
         let myEpoch = myDate / 1000;
 
         const buyer = accounts[1];
-        const amountOfBusd = 50025;//await web3.utils.toWei("50.025", "ether");
-        const amountOfCulte = await web3.utils.toWei("1000", "ether");
+        const amountOfBusd = await web3.utils.toWei("4013", "ether");
 
         // Init mock sales to offer 1 ***********************************************
         let newClt = await CulteToken.new();
@@ -174,14 +173,50 @@ contract("CulteSale", async accounts => {
         await newBusd.transfer(buyer, amountOfBusd);
         await newBusd.approve(newSale.address, amountOfBusd, {from: buyer});
        
-        let result = await newSale.buyCulteWithBusd(amountOfBusd, 3, { from: buyer });
+        let result = await newSale.buyCulteWithBusd(amountOfBusd, { from: buyer });
         let cultPrice = result.logs[0].args._currentPrice.toString();
         let buyerBalance = (await newClt.balanceOf(buyer)).toString();
         buyerBalance = await web3.utils.toWei("" + buyerBalance, "ether");
-        
-        expect(await newClt.balanceOf(buyer)).to.be.bignumber.equal(new BN("1000500000000000000000"));
+
+        expect(cultPrice).to.be.bignumber.equal(new BN("5"));
+        expect(await newClt.balanceOf(buyer)).to.be.bignumber.equal(new BN("83470400000000000000000"));
     });
-    */
+  
+    it("Should apply for offer 1 - 4001 (BUSD) => 83220,80 tokens", async () => {
+
+        let myDate = new Date();
+        myDate = myDate.setDate(myDate.getDate() - 100);
+        let myEpoch = myDate / 1000;
+
+        const buyer = accounts[1];
+        const amountOfBusd = await web3.utils.toWei("4001", "ether");
+
+        // Init mock sales to offer 1 ***********************************************
+        let newClt = await CulteToken.new();
+        let newBusd = await BEP20Token.new();
+        let newSale = await CulteSale.new(
+            newClt.address,
+            wallet,
+            //Math.floor(myEpoch),
+            Math.floor(Date.now() / 1000.0),
+            newBusd.address
+        );
+        // sending all tokens to sales contract
+        await newClt.transfer(newSale.address, await web3.utils.toWei("210000000", "ether"));
+        // ***************************************************************************
+        await newBusd.transfer(buyer, amountOfBusd);
+        await newBusd.approve(newSale.address, amountOfBusd, {from: buyer});
+       
+        let result = await newSale.buyCulteWithBusd(amountOfBusd, { from: buyer });
+        let cultPrice = result.logs[0].args._currentPrice.toString();
+        let buyerBalance = (await newClt.balanceOf(buyer)).toString();
+        buyerBalance = await web3.utils.toWei("" + buyerBalance, "ether");
+
+        console.log((await newClt.balanceOf(buyer)).toString());
+        
+        expect(cultPrice).to.be.bignumber.equal(new BN("5"));
+        expect(await newClt.balanceOf(buyer)).to.be.bignumber.equal(new BN("83220800000000000000000"));
+    });
 
     it("Should apply for offer 1 - 50 (BUSD)  => 1000 tokens", async () => {
 
@@ -213,7 +248,7 @@ contract("CulteSale", async accounts => {
         let buyerBalance = (await newClt.balanceOf(buyer)).toString();
         buyerBalance = await web3.utils.toWei("" + buyerBalance, "ether");
         
-        expect(cultPrice).to.be.bignumber.equal(new BN("50000000000000000"));
+        expect(cultPrice).to.be.bignumber.equal(new BN("5"));
         expect(await newClt.balanceOf(buyer)).to.be.bignumber.equal(new BN("1000000000000000000000"));
     });
 
@@ -246,7 +281,7 @@ contract("CulteSale", async accounts => {
         let buyerBalance = (await newClt.balanceOf(buyer)).toString();
         buyerBalance = await web3.utils.toWei("" + buyerBalance, "ether");
         
-        expect(cultPrice).to.be.bignumber.equal(new BN("70000000000000000"));
+        expect(cultPrice).to.be.bignumber.equal(new BN("7"));
         expect(await newClt.balanceOf(buyer)).to.be.bignumber.equal(new BN("1000000000000000000000"));
     });
 
@@ -278,7 +313,7 @@ contract("CulteSale", async accounts => {
         let buyerBalance = (await newClt.balanceOf(buyer)).toString();
         buyerBalance = await web3.utils.toWei("" + buyerBalance, "ether");
         
-        expect(cultPrice).to.be.bignumber.equal(new BN("100000000000000000"));
+        expect(cultPrice).to.be.bignumber.equal(new BN("10"));
         expect(await newClt.balanceOf(buyer)).to.be.bignumber.equal(new BN("1000000000000000000000"));
     });
 

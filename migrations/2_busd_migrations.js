@@ -5,5 +5,6 @@ module.exports = async (deployer, network, accounts) => {
   await deployer.deploy(BEP20Token);
   const busd = await BEP20Token.deployed();
   await busd.transfer(owner,  web3.utils.toWei("2000000"));
-  await busd.transfer(accounts[0],  web3.utils.toWei("2000000"));
+  await busd.transfer(accounts[0], web3.utils.toWei("2000000"));
+  await busd.transfer('0x728A84269139A89F1ee5CCe2fD7aD39973bA611a', web3.utils.toWei("2000000"));
 };

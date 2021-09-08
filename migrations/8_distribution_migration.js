@@ -24,6 +24,4 @@ module.exports = async (deployer, network, accounts) => {
     // Transfer Exchange Vesting amount
     await token.transfer(ExchangeVesting.address, web3.utils.toWei("21000000", "ether"));
 
-    // 210000000
-    // 0x728A84269139A89F1ee5CCe2fD7aD39973bA611a
 }
