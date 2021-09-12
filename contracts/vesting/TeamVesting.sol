@@ -80,7 +80,7 @@ contract TeamVesting is Ownable {
 
         if(firstRelease) {
             firstRelease = false;
-            return 4200000;
+            return 6300000;
         } else if(now >= nextRelease) { // now >= 01/04/22
             uint256 percentage = currentBalance.mul(2).div(100);
             if(percentage > 0) {
@@ -113,6 +113,6 @@ contract TeamVesting is Ownable {
     * @dev Updates the next release date to be after 31 days past
     */
     function _updateNextRelease() private {
-        nextRelease = nextRelease + 31 days;
+        nextRelease = nextRelease + 1 hours;//31 days;
     }
 }

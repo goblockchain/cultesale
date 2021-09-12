@@ -17,6 +17,7 @@ expect
 const CulteSale = artifacts.require("CulteSale");
 const CulteToken = artifacts.require("CulteToken");
 const BEP20Token = artifacts.require("BEP20Token");
+const truffleAssert = require("truffle-assertions");
 
 contract("CulteSale", async accounts => {
 
@@ -146,6 +147,72 @@ contract("CulteSale", async accounts => {
         let salesBalance = await newClt.balanceOf(newSale.address);
         assert.equal(210000000, walletBalance, "Wallet balance is not correct after sales close");
         assert.equal(0, salesBalance, "Sale balance is not correct after sales close");
+    });
+
+    it("Should fail for no balance in the sale", async () => {
+
+        let myDate = new Date();
+        myDate = myDate.setDate(myDate.getDate() - 100);
+        let myEpoch = myDate / 1000;
+
+        const buyer = accounts[1];
+        const amountOfBusd = await web3.utils.toWei("50", "ether");
+
+        // Init mock sales to offer 1 ***********************************************
+        let newClt = await CulteToken.new();
+        let newBusd = await BEP20Token.new();
+        let newSale = await CulteSale.new(
+            newClt.address,
+            wallet,
+            //Math.floor(myEpoch),
+            Math.floor(Date.now() / 1000.0),
+            newBusd.address
+        );
+        // sending all tokens to sales contract
+        await newClt.transfer(newSale.address, await web3.utils.toWei("10", "ether"));
+        // ***************************************************************************
+        await newBusd.transfer(buyer, amountOfBusd);
+        await newBusd.approve(newSale.address, amountOfBusd, {from: buyer});
+       
+        await truffleAssert.reverts(
+            newSale.buyCulteWithBusd(amountOfBusd, { from: buyer }),
+            "No more tokens available to be  bougth"
+        );
+    });
+
+    it("Should apply for offer 1 - 51,17 (BUSD) => 1023,4 tokens", async () => {
+
+        let myDate = new Date();
+        myDate = myDate.setDate(myDate.getDate() - 100);
+        let myEpoch = myDate / 1000;
+
+        const buyer = accounts[1];
+        const amountOfBusd = await web3.utils.toWei("51.17", "ether");
+
+        // Init mock sales to offer 1 ***********************************************
+        let newClt = await CulteToken.new();
+        let newBusd = await BEP20Token.new();
+        let newSale = await CulteSale.new(
+            newClt.address,
+            wallet,
+            //Math.floor(myEpoch),
+            Math.floor(Date.now() / 1000.0),
+            newBusd.address
+        );
+        // sending all tokens to sales contract
+        await newClt.transfer(newSale.address, await web3.utils.toWei("210000000", "ether"));
+        // ***************************************************************************
+        await newBusd.transfer(buyer, amountOfBusd);
+        await newBusd.approve(newSale.address, amountOfBusd, {from: buyer});
+       
+        let result = await newSale.buyCulteWithBusd(amountOfBusd, { from: buyer });
+        let cultPrice = result.logs[0].args._currentPrice.toString();
+        let buyerBalance = (await newClt.balanceOf(buyer)).toString();
+        buyerBalance = await web3.utils.toWei("" + buyerBalance, "ether");
+
+        console.log((await newClt.balanceOf(buyer)).toString());
+        //expect(cultPrice).to.be.bignumber.equal(new BN("5"));
+       //expect(await newClt.balanceOf(buyer)).to.be.bignumber.equal(new BN("83470400000000000000000"));
     });
 
     it("Should apply for offer 1 - 4013 (BUSD) => 83470,4 tokens", async () => {

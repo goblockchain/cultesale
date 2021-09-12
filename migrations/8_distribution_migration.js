@@ -16,12 +16,12 @@ module.exports = async (deployer, network, accounts) => {
     await token.transfer(sale.address, web3.utils.toWei("21000000", "ether"));
 
     // Transfer Culte Vesting amount
-    await token.transfer(CulteVesting.address, web3.utils.toWei("147000000", "ether"));
+    await token.transfer(CulteVesting.address, web3.utils.toWei("126000000", "ether"));
 
     // Transfer Team Vesting amount
     await token.transfer(TeamVesting.address, web3.utils.toWei("21000000", "ether"));
 
     // Transfer Exchange Vesting amount
-    await token.transfer(ExchangeVesting.address, web3.utils.toWei("21000000", "ether"));
+    await token.transfer(ExchangeVesting.address, web3.utils.toWei("42000000", "ether"));
 
 }
