@@ -23,7 +23,7 @@
 //
 // const fs = require('fs');
 const HDWalletProvider = require('@truffle/hdwallet-provider');
-const mnemonic = "";
+const mnemonic = "deposit abstract hand album garbage next icon brief what across mention bubble";
 
 module.exports = {
   /**

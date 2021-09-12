@@ -4,7 +4,7 @@ const CulteVesting = artifacts.require("CulteVesting");
 module.exports = async (deployer, network, accounts) => {
   const token = await CulteToken.deployed();
   const owner = '0xe5cB5A6390784FF6c4aE1054b02F8d32D349D27B';//accounts[5];
-  const beneficiary = '0xe5cB5A6390784FF6c4aE1054b02F8d32D349D27B';//accounts[5];
+  const beneficiary = '0x8C892d311DB71adB7fCB194F2463C4BD8A7ea9e4';//accounts[5];
   
   await deployer.deploy(
     CulteVesting, 
@@ -13,8 +13,8 @@ module.exports = async (deployer, network, accounts) => {
     Math.floor(Date.now() / 1000)
   );
 
-  //let vesting = await CulteVesting.deployed();
-  await token.transfer(CulteVesting.address, 147000000);
-  //await vesting.transferOwnership(owner);
+  let vesting = await CulteVesting.deployed();
+  // await token.transfer(CulteVesting.address, web3.utils.toWei("21000000", "ether"));
+  await vesting.transferOwnership(owner);
 };
 

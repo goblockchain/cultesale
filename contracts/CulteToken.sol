@@ -1,7 +1,7 @@
 pragma solidity >=0.5.0 <=0.5.9;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "./interfaces/Tentacle.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol";
 
 /**
  * @dev Implementation of the `IERC20` interface, for the CulteToken
@@ -9,26 +9,12 @@ import "./interfaces/Tentacle.sol";
  * As vanilla as it gets, mints 210 million tokens to the sales contract
  * There are no ownership, admin or minting functions after the creation
  */
-contract CulteToken is ERC20 {
-    string public constant name = "Cultecoin";
-    string public constant symbol = "CULTE";
-    uint256 public constant decimals = 18;
+contract CulteToken is ERC20, ERC20Detailed {
 
     /**
      * @dev Constructor, mints all tokens to deployer.
      */
-    constructor() public {
-        _mint(msg.sender, 210000000); //210 million
-    }
-
-    /**
-     * @dev Function to deposit tokens in Culte with one transaction
-     * @notice Will approve and call depositERC20 in the user provided address
-     * @param destination address in which to deposit tokens
-     * @param quantity quantity to be deposited
-     */
-    function deposit(address destination, uint256 quantity) public {
-        approve(destination, quantity);
-        ITentacle(destination).depositERC20(msg.sender, address(this));
+    constructor() ERC20Detailed("Cultecoin", "CULTE", 18) public {
+        _mint(msg.sender, 210000000*10**18); //210 million
     }
 }

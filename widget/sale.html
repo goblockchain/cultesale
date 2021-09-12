@@ -5,26 +5,97 @@
     <title>Culte Sale Widget</title>
     <link rel="stylesheet" href="https://unpkg.com/picnic">
 </head>
+<style>
+    .imponent .logo {
+        height: 3em;
+    }
+</style>
 
-<body style="margin: 10%;">
-    <h1>Buy Now</h1>
-    <h2>BUSD Contract: <a href="https://testnet.bscscan.com/address/0xed24fc36d5ee211ea25a80239fb8c4cfd80f12ee">0xed24fc36d5ee211ea25a80239fb8c4cfd80f12ee</a></h2>
-    <h2>Sale Contract: <a href="https://testnet.bscscan.com/address/0x7c7136b6ED039319E9a983F780DeF9660703C260">0x7c7136b6ED039319E9a983F780DeF9660703C260</a></h2>
-    <form>
-        <label><input id="val" type="number" placeholder="Amount to buy"></label>
-        <br><br>
-        <select id="curr">
-            <option>Select currency</option>
-            <option value="BUSD">BUSD (Binance USD)</option>
-        </select>
-        <br><br>
-        <button type="button" id="buy" style="width: 100%;">Buy</button>
-
+<body style="margin: 5%;">
+    <nav class="demo imponent">
+        <a href="#" class="brand">
+            <img class="logo" src="https://media-exp1.licdn.com/dms/image/C4D0BAQFXTIH2g8dGMw/company-logo_200_200/0/1598537519565?e=2159024400&v=beta&t=v83TBOCBeATsD_1MlLIu_-4CC-o7Ve3fvtJUDuhYOEg" />
+            <span>CulteCoin Testing Page</span>
+        </a>
+    </nav>
+    <span class="button stack icon-file-code" style="background-color: #00b33c;" id="culteSaleAddress"></span>
+    <span class="button stack icon-file-code" style="background-color: #00b33c;" id="busdAddress"></span>
+    <span class="button stack icon-file-code" style="background-color: #00b33c;" id="culteAddress"></span>
+    <span class="button stack icon-file-code" style="background-color: #00b33c;" id="teamVestingAddress"></span>
+    <span class="button stack icon-file-code" style="background-color: #00b33c;" id="culteVestingAddress"></span>
+    <span class="button stack icon-file-code" style="background-color: #00b33c;" id="exchangeVestingAddress"></span>
+    <!--
+    <h2>Culte Token: <a href="https://testnet.bscscan.com/address/0xEDfD73465a55b7D023eFecA290ce409796836748">0xEDfD73465a55b7D023eFecA290ce409796836748</a></h2>
+    <h2>BUSD Contract: <a href="https://testnet.bscscan.com/address/0x9f39706A23f0e9c215141c59779BE3E302F07D32">0x9f39706A23f0e9c215141c59779BE3E302F07D32</a></h2>
+    <h2>Sale Contract: <a href="https://testnet.bscscan.com/address/0xA7A4190DdCcB1F38f1dac503b2955e5e7E2005C2">0xA7A4190DdCcB1F38f1dac503b2955e5e7E2005C2</a></h2>
+    <h2>Culte Vesting: <a href="https://testnet.bscscan.com/address/0xA5F96dB55C78f20528B8c07c29bf284A40409eA9">0xA5F96dB55C78f20528B8c07c29bf284A40409eA9</a></h2>
+    <h2>Team Vesting: <a href="https://testnet.bscscan.com/address/0xe042d7c52eCa4142afFC1131f2A340eb92535F60">0xe042d7c52eCa4142afFC1131f2A340eb92535F60</a></h2>
+    <h2>ExchangeVesting: <a href="https://testnet.bscscan.com/address/0x36d10994951DdF0835489DdB07b92f2f56316b87">0x36d10994951DdF0835489DdB07b92f2f56316b87</a></h2>
+    -->
+    <br><br>
+    <article class="card">
+        <header>
+            <h3>Buy CulteCoin</h3>
+        </header>
+        <footer>
+        <form>
+            <label><input id="val" type="number" placeholder="Amount to buy"></label>
+            <br><br>
+            <select id="curr">
+                <option>Select currency</option>
+                <option value="BUSD">BUSD (Binance USD)</option>
+            </select>
+            <br><br>
+            <button type="button" id="buy" style="width: 100%;background-color: #00b33c;">Buy</button>
+        </footer>
+    </article>  
     </form>
+    <br><br>
+    <article class="card">
+        <header>
+            <h3>Release Vestings</h3>
+        </header>
+        <footer>
+            <button type="button" id="releaseTeam" style="width: 100%;background-color: #00b33c;">Release Team Vesting</button>
+            <button type="button" id="releaseCulte" style="width: 100%;background-color: #00b33c;">Release Culte Vesting</button>
+        </footer>
+    </article>
+    <br><br>
+    <article class="card">
+        <header>
+            <h3>Withdraw from Exchange</h3>
+        </header>
+        <footer>
+            <form>
+                <label><input id="withdrawValue" type="text" placeholder="Amount to withdraw"></label>
+                <br><br>
+                <button type="button" id="withdrawExchange" style="width: 100%;background-color: #00b33c;">Withdraw</button>
+            </form>
+        </footer>
+    </article>
     <script src="https://cdn.ethers.io/scripts/ethers-v4.min.js" charset="utf-8" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bignumber.js/8.0.2/bignumber.min.js" charset="utf-8" type="text/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
     <script>
+
         const desiredNetwork = '97' // '1' is the bsc main network ID, 4 is Rinkeby
-        const culteSaleAddress = "0x7c7136b6ED039319E9a983F780DeF9660703C260" // UPDATE, this is pointing to Rinkeby
+        const culteSaleAddress = "0x64625495Ee5022D4DB48Eae15E641C5d856c4613"; // UPDATE, this is pointing to Rinkeby
+        const busdAddress = "0xeA9E19AF44d5b703f51efCFaaA85E91b4FCd19Dc";
+        const culteAddress = "0x49f02DB348DD8F3742788f2645b1739faa767655";
+        const teamVestingAddress = "0x82762E2066E4A0E6a39bBB658584a24EF17Ff534";
+        const culteVestingAddress = "0xffcDc07842b83a625D16d53409f78D492d8a8E5F";
+        const exchangeVestingAddress = "0xe300759066792F973ab589221C14A4D7D61a4ced";
+        
+        $(function() {
+            $('#culteSaleAddress').append('Culte Sale Address: <a href="https://testnet.bscscan.com/address/'+culteSaleAddress+'">'+culteSaleAddress+'</a>');
+            $('#busdAddress').append('BUSD Address: <a href="https://testnet.bscscan.com/address/'+busdAddress+'">'+busdAddress+'</a>');
+            $('#culteAddress').append('Culte Token Address: <a href="https://testnet.bscscan.com/address/'+culteAddress+'">'+culteAddress+'</a>');
+            $('#teamVestingAddress').append('Team Vesting Address: <a href="https://testnet.bscscan.com/address/'+teamVestingAddress+'">'+teamVestingAddress+'</a>');
+            $('#culteVestingAddress').append('Culte Vesting Address: <a href="https://testnet.bscscan.com/address/'+culteVestingAddress+'">'+culteVestingAddress+'</a>');
+            $('#exchangeVestingAddress').append('Exchange Vesting Address: <a href="https://testnet.bscscan.com/address/'+exchangeVestingAddress+'">'+exchangeVestingAddress+'</a>');
+        });
+
 
         // Detect whether the current browser is ethereum-compatible,
         // and handle the case where it isn't:
@@ -52,6 +123,64 @@
                     }
                 })
         }
+
+        document.getElementById('releaseTeam').addEventListener('click', async function() {
+            let provider = new ethers.providers.Web3Provider(web3.currentProvider);
+            var signer = provider.getSigner();
+            let account = await signer.getAddress();
+            let abi = [
+                "function release() public"
+            ];
+            let VestingContract = new ethers.Contract(teamVestingAddress, abi, signer);
+            let tx;
+            try {
+                tx = await VestingContract.release();
+                await tx.wait(1);
+            } catch (err) {
+                console.log(err);
+                alert(err.data.message);
+            }
+        });
+
+        document.getElementById('releaseCulte').addEventListener('click', async function() {
+            let provider = new ethers.providers.Web3Provider(web3.currentProvider);
+            var signer = provider.getSigner();
+            let account = await signer.getAddress();
+            let abi = [
+                "function release() public"
+            ];
+            let VestingContract = new ethers.Contract(culteVestingAddress, abi, signer);
+            let tx;
+            try {
+                tx = await VestingContract.release();
+                await tx.wait(1);
+            } catch (err) {
+                console.log(err);
+                alert(err.data.message);
+            }
+        });
+
+        document.getElementById('withdrawExchange').addEventListener('click', async function() {
+            const value = document.getElementById("withdrawValue").value;
+            if(value == 0) {
+                alert('Please fill the value you want to withdraw');
+            }
+            let provider = new ethers.providers.Web3Provider(web3.currentProvider);
+            var signer = provider.getSigner();
+            let account = await signer.getAddress();
+            let abi = [
+                "function release(uint256 _amount) public"
+            ];
+            let ExchangeContract = new ethers.Contract(exchangeVestingAddress, abi, signer);
+            let tx;
+            try {
+                tx = await ExchangeContract.release(Web3.utils.toWei(""+value, "ether"));
+                await tx.wait(1);
+            } catch (err) {
+                console.log(err);
+                alert(err.data.message);
+            }
+        });
 
         document.getElementById('buy').addEventListener('click', function () {
             const value = document.getElementById("val").value;
@@ -85,20 +214,48 @@
             let abi = [
                 "function buyCulteWithBusd(uint256 _amount) public"
             ];
+            let abiBUSD = [
+                "function approve(address spender, uint256 amount) external returns (bool)"
+            ];
+            let culteAbi = [
+                "function balanceOf(address account) public view returns (uint256)"
+            ];
             let CulteSaleContract = new ethers.Contract(culteSaleAddress, abi, signer);
+            let BUSDContract = new ethers.Contract(busdAddress, abiBUSD, signer);
+            let CulteCoin = new ethers.Contract(culteAddress, culteAbi, signer);
 
-            console.log(await signer.getAddress());
+            //alert("Sales balance: " + await CulteCoin.balanceOf(culteSaleAddress));
+
             if(currency == "BUSD") {
                 let tx;
+                let tx1;
+                let receipt;
                 try {
-                    tx = await CulteSaleContract.buyCulteWithBusd(value);
+                    tx1 = await BUSDContract.approve(culteSaleAddress, Web3.utils.toWei(""+value, "ether"));
+                    await tx1.wait(1);
+                    tx = await CulteSaleContract.buyCulteWithBusd(Web3.utils.toWei(""+value, "ether"));
+                    receipt = await tx.wait(1);
                 } catch (err) {
                     console.log(err);
                     alert(err.data.message);
                 }
-                let receipt = await tx.wait(1)
                 if (receipt.status == 1) alert("Purchase confirmed, thank you!")
             }
+        }
+
+        function numberWithoutDecimal(num) {
+            return parseInt((''+num).replace('.',''));
+        }
+
+        function decimalPlaces(num) {
+            var match = (''+num).match(/(?:\.(\d+))?(?:[eE]([+-]?\d+))?$/);
+            if (!match) { return 0; }
+            return Math.max(
+                0,
+                // Number of digits right of decimal point.
+                (match[1] ? match[1].length : 0)
+                // Adjust for scientific notation.
+                - (match[2] ? +match[2] : 0));
         }
     </script>
 </body>

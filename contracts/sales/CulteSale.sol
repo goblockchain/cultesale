@@ -22,7 +22,7 @@ contract CulteSale is Ownable {
 
     address payable public wallet;
     uint256 public startDate;
-    // uint256 public endDate;
+    uint256 public endDate;
     bool public postponed = false;
     uint256 public soldAmount;
 
@@ -47,7 +47,7 @@ contract CulteSale is Ownable {
         BUSD = IBEP20(_busdTokenAddress);
         wallet = _initialWallet;
         startDate = _startDate;
-        // endDate = _startDate + 139 days;
+        endDate = _startDate + 90 days;
 
         setSalePhases();
         setBonus();
@@ -61,7 +61,8 @@ contract CulteSale is Ownable {
         _;
     }
 
-    event CLTBought(address _receiver, uint256 _originalAmount, uint256 _bonusAmount, uint256 _currentPrice);
+    event CLTBought(address _receiver, uint256 _originalAmount, uint256 _currentPrice);
+    event SalesClosed(uint256 _closeDate, uint256 _receiver);
 
     /**
     * @notice Set the sale phases according to the requirements:
@@ -74,6 +75,7 @@ contract CulteSale is Ownable {
     function setSalePhases() private {
 
         uint256 start0 = startDate;             // 08/15 to 09/30 U$ 0,05 => 46 days
+       
         uint256 start1 = startDate + 47 days;   // 10/01 to 11/15 U$ 0,07 => 45 days
         uint256 start2 = startDate + 92 days;   // 11/16 to 12/31 U$ 0,10 => 45 days
         uint256 salesEnd = startDate + 136 days;// 01/01/2022 => sales ending
@@ -92,9 +94,9 @@ contract CulteSale is Ownable {
     * ....... from 100.000 to infinity receive 10% bonus tokens
     */
     function setBonus() private {
-        bonus.push(Structs.Bonus(30000, 49999, 2)); // 2%
-        bonus.push(Structs.Bonus(50000, 99999, 4)); // 4%
-        bonus.push(Structs.Bonus(100000, 210000000000000000000000000, 10)); // 10%
+        bonus.push(Structs.Bonus(30000*10**18, 49999*10**18, 2)); // 2%
+        bonus.push(Structs.Bonus(50000*10**18, 99999*10**18, 4)); // 4%
+        bonus.push(Structs.Bonus(100000*10**18, 21000000*10**18, 10)); // 10%
     }
 
     /**
@@ -111,21 +113,18 @@ contract CulteSale is Ownable {
 
         Structs.Phase memory _salePhase = getCurrentPhase();
 
-        uint256 centInBusd = 1*10**16;
-        uint256 tokenPrice = centInBusd.mul(_salePhase.timesPrice);
+        uint256 tokenPrice = _salePhase.timesPrice;
+        uint256 culteAmount;
 
-        uint256 culteAmount = getCulteAmountWithBusd(_amount, tokenPrice);
-        uint256 bonusAmount = applyBonus(culteAmount);
-        uint256 totalCulte = culteAmount;
-        totalCulte = totalCulte.add(bonusAmount);
-
-        require(CLT.transfer(msg.sender, totalCulte), "CLT Transfer failed");
+        //tokenPrice = tokenPrice*10**16;
+        culteAmount = getCulteAmountWithBusd(_amount, tokenPrice);
+        
+        require(CLT.transfer(msg.sender, culteAmount), "CLT Transfer failed");
 
         emit CLTBought(
             msg.sender,
             culteAmount,
-            bonusAmount,
-            centInBusd.mul(_salePhase.timesPrice)
+            tokenPrice
         );
     }
 
@@ -136,16 +135,20 @@ contract CulteSale is Ownable {
      */
     function getCulteAmountWithBusd(uint256 _busdAmount, uint256 _tokenPrice) public returns (uint256) {
 
-        uint256 quantity = SafeMath.div(_busdAmount, _tokenPrice);
+        _tokenPrice = SafeMath.mul(_tokenPrice, 10**16);
+        uint256 culteAmount = SafeMath.div(_busdAmount, _tokenPrice);
 
-        // check for tokens in saleSupply existance
-        require(quantity > 0, "Quantity of calculated tokens should be greater than zero");
-        require(quantity <= CLT.balanceOf(address(this)), "No more tokens available to be  bougth");
+        require(culteAmount > 0, "Quantity of calculated tokens should be greater than zero");
+        require(culteAmount >= 1000, "Offer starts on 1000 CULTE");
 
         // Updates the amount sold
-        soldAmount = soldAmount.add(quantity);
+        culteAmount = SafeMath.mul(culteAmount, 10*10**17);
+        require(culteAmount <= CLT.balanceOf(address(this)), "No more tokens available to be  bougth");
 
-        return quantity;
+        uint256 bonusAmount = applyBonus(culteAmount);
+        culteAmount = SafeMath.add(culteAmount, bonusAmount);
+        soldAmount = SafeMath.add(soldAmount, culteAmount);
+        return culteAmount;
     }
 
     /**
@@ -155,12 +158,12 @@ contract CulteSale is Ownable {
      */
     function applyBonus(uint256 _cltAmount) public view returns (uint256) {
 
-        uint256 divCheck = _cltAmount.mul(100);
-        require(divCheck.div(100) == _cltAmount, "_amount to small for percent calculation");
         uint256 currentBonus = getCurrentBonus(_cltAmount);
-        uint256 mult = _cltAmount.mul(currentBonus);
-
-        return mult.div(100);
+        if(currentBonus > 0) {
+            return _cltAmount.mul(currentBonus).div(100);
+        } else {
+            return 0;
+        }
     }
 
     /**
@@ -189,10 +192,21 @@ contract CulteSale is Ownable {
     */
     function getCurrentBonus(uint256 _amount) internal view returns (uint256) {
         for(uint256 i = 0; i < bonus.length; i++) {
-            if(_amount >= bonus[i].start && _amount <= bonus[i].end) {
+            uint256 startAmount = bonus[i].start;
+            uint256 endAmount = bonus[i].end;
+            if(_amount >= startAmount && _amount <= endAmount) {
                 return bonus[i].percent;
             }
         }
-        return bonus[0].percent;
+        return 0;
+    }
+
+    /**
+    * @notice Closes the sale and transfer the remaning amount to the wallet address
+    */
+    function closeSales() public onlyOwner {
+        require(now >= endDate, "Sale has not finished yet");
+        uint256 remaningAmount = CLT.balanceOf(address(this));
+        CLT.transfer(wallet, remaningAmount);
     }
 }
