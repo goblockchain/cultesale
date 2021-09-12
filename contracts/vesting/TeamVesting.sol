@@ -113,6 +113,6 @@ contract TeamVesting is Ownable {
     * @dev Updates the next release date to be after 31 days past
     */
     function _updateNextRelease() private {
-        nextRelease = nextRelease + 1 hours;//31 days;
+        nextRelease = nextRelease + 31 days;
     }
 }

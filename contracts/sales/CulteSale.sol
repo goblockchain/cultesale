@@ -76,13 +76,9 @@ contract CulteSale is Ownable {
 
         uint256 start0 = startDate;             // 08/15 to 09/30 U$ 0,05 => 46 days
        
-        uint256 start1 = startDate + 1 days;   // 10/01 to 11/15 U$ 0,07 => 45 days
-        uint256 start2 = startDate + 2 days;   // 11/16 to 12/31 U$ 0,10 => 45 days
-        uint256 salesEnd = startDate + 3 days;// 01/01/2022 => sales ending
-
-        // uint256 start1 = startDate + 47 days;   // 10/01 to 11/15 U$ 0,07 => 45 days
-        // uint256 start2 = startDate + 92 days;   // 11/16 to 12/31 U$ 0,10 => 45 days
-        // uint256 salesEnd = startDate + 136 days;// 01/01/2022 => sales ending
+        uint256 start1 = startDate + 47 days;   // 10/01 to 11/15 U$ 0,07 => 45 days
+        uint256 start2 = startDate + 92 days;   // 11/16 to 12/31 U$ 0,10 => 45 days
+        uint256 salesEnd = startDate + 136 days;// 01/01/2022 => sales ending
 
         phases.push(Structs.Phase(start0, start1, 5));
         phases.push(Structs.Phase(start1, start2, 7));
