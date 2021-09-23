@@ -149,6 +149,25 @@ contract("CulteSale", async accounts => {
         assert.equal(0, salesBalance, "Sale balance is not correct after sales close");
     });
 
+    it("Should close the sales", async () => {
+
+        let myDate = new Date();
+        myDate = myDate.setDate(myDate.getDate() - 100);
+        let myEpoch = myDate / 1000;
+
+        // Init mock sales to offer 2 ***********************************************
+        let newClt = await CulteToken.new();
+        let newBusd = await BEP20Token.new();
+        let newSale = await CulteSale.new(
+            newClt.address,
+            wallet,
+            Math.floor(myEpoch),
+            newBusd.address
+        );
+        // sending all tokens to sales contract
+        await newClt.transfer(newSale.address, 210000000);
+    });
+
     it("Should fail for no balance in the sale", async () => {
 
         let myDate = new Date();
@@ -322,7 +341,7 @@ contract("CulteSale", async accounts => {
     it("Should apply for offer 2 (BUSD)", async () => {
 
         let myDate = new Date();
-        myDate = myDate.setDate(myDate.getDate() - 50);
+        myDate = myDate.setDate(myDate.getDate() - 5);
         let myEpoch = myDate / 1000;
 
         const buyer = accounts[1];
@@ -355,7 +374,7 @@ contract("CulteSale", async accounts => {
     it("Should apply for offer 3 (BUSD)", async () => {
 
         let myDate = new Date();
-        myDate = myDate.setDate(myDate.getDate() - 100);
+        myDate = myDate.setDate(myDate.getDate() - 30);
         let myEpoch = myDate / 1000;
         const buyer = accounts[1];
         const amountOfBusd = await web3.utils.toWei("100", "ether");

@@ -76,13 +76,15 @@ contract CulteSale is Ownable {
 
         uint256 start0 = startDate;             // 08/15 to 09/30 U$ 0,05 => 46 days
        
-        uint256 start1 = startDate + 47 days;   // 10/01 to 11/15 U$ 0,07 => 45 days
-        uint256 start2 = startDate + 92 days;   // 11/16 to 12/31 U$ 0,10 => 45 days
-        uint256 salesEnd = startDate + 136 days;// 01/01/2022 => sales ending
+        uint256 start1 = startDate + 5 days;   
+        uint256 start2 = startDate + 30 days;
+        uint256 start3 = startDate + 61 days;
+        uint256 saleEndDate = startDate + 91 days;
 
         phases.push(Structs.Phase(start0, start1, 5));
         phases.push(Structs.Phase(start1, start2, 7));
-        phases.push(Structs.Phase(start2, salesEnd, 10));
+        phases.push(Structs.Phase(start2, start3, 10));
+        phases.push(Structs.Phase(start3, saleEndDate, 15));
     }
 
     /**
@@ -116,7 +118,6 @@ contract CulteSale is Ownable {
         uint256 tokenPrice = _salePhase.timesPrice;
         uint256 culteAmount;
 
-        //tokenPrice = tokenPrice*10**16;
         culteAmount = getCulteAmountWithBusd(_amount, tokenPrice);
         
         require(CLT.transfer(msg.sender, culteAmount), "CLT Transfer failed");
@@ -182,7 +183,7 @@ contract CulteSale is Ownable {
                 return phases[i];
             }
         }
-        return phases[2];
+        return phases[3];
     }
 
     /**
@@ -208,5 +209,9 @@ contract CulteSale is Ownable {
         require(now >= endDate, "Sale has not finished yet");
         uint256 remaningAmount = CLT.balanceOf(address(this));
         CLT.transfer(wallet, remaningAmount);
+    }
+
+    function() external payable { 
+        revert();
     }
 }

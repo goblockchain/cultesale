@@ -23,7 +23,7 @@
 //
 // const fs = require('fs');
 const HDWalletProvider = require('@truffle/hdwallet-provider');
-const mnemonic = "deposit abstract hand album garbage next icon brief what across mention bubble";
+const mnemonic = "";
 
 module.exports = {
   /**
@@ -54,7 +54,7 @@ module.exports = {
       network_id: "*"
     },
     rinkeby: {
-      provider: () => new HDWalletProvider(mnemonic, `https://rinkeby.infura.io/v3/d58e9b158278455c958a30b7ccf7a9ea`),
+      provider: () => new HDWalletProvider(mnemonic, `https://rinkeby.infura.io/v3/`),
       network_id: 4,
       confirmations: 1,
       timeoutBlocks: 200000000000,
@@ -64,6 +64,13 @@ module.exports = {
       provider: () => new HDWalletProvider(mnemonic, `https://data-seed-prebsc-1-s1.binance.org:8545`),
       network_id: 97,
       confirmations: 1,
+      timeoutBlocks: 20000,
+      skipDryRun: true
+    },
+    bsc: {
+      provider: () => new HDWalletProvider(mnemonic, `https://bsc-dataseed1.binance.org`),
+      network_id: 56,
+      confirmations: 2,
       timeoutBlocks: 20000,
       skipDryRun: true
     },

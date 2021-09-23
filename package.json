@@ -25,6 +25,7 @@
     "web3": "^1.5.1"
   },
   "devDependencies": {
-    "nodemon": "^2.0.12"
+    "nodemon": "^2.0.12",
+    "truffle-flattener": "^1.5.0"
   }
 }

@@ -73,27 +73,41 @@
             </form>
         </footer>
     </article>
+    <article class="card">
+        <header>
+            <h3>Send Token</h3>
+        </header>
+        <footer>
+            <form>
+                <label><input id="sendTokenAddress" type="text" placeholder="Address to receive"></label>
+                <br><br>
+                <label><input id="sendTokenAmount" type="text" placeholder="Amount to send"></label>
+                <br><br>
+                <button type="button" id="sendTokens" style="width: 100%;background-color: #00b33c;">Withdraw</button>
+            </form>
+        </footer>
+    </article>
     <script src="https://cdn.ethers.io/scripts/ethers-v4.min.js" charset="utf-8" type="text/javascript"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bignumber.js/8.0.2/bignumber.min.js" charset="utf-8" type="text/javascript"></script>
     <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
     <script>
 
-        const desiredNetwork = '97' // '1' is the bsc main network ID, 4 is Rinkeby
-        const culteSaleAddress = "0x64625495Ee5022D4DB48Eae15E641C5d856c4613"; // UPDATE, this is pointing to Rinkeby
-        const busdAddress = "0xeA9E19AF44d5b703f51efCFaaA85E91b4FCd19Dc";
-        const culteAddress = "0x49f02DB348DD8F3742788f2645b1739faa767655";
-        const teamVestingAddress = "0x82762E2066E4A0E6a39bBB658584a24EF17Ff534";
-        const culteVestingAddress = "0xffcDc07842b83a625D16d53409f78D492d8a8E5F";
-        const exchangeVestingAddress = "0xe300759066792F973ab589221C14A4D7D61a4ced";
+        const desiredNetwork = '56' // '1' is the bsc main network ID, 4 is Rinkeby
+        const busdAddress = "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56";
+        const culteAddress = "0x9f0B91e4ee5aAF23f257782dEdec19DC5CDBd11b";
+        const culteSaleAddress = "0x792d1951B7032441A90d7b68b80Ac799Db5A87c2"; // UPDATE, this is pointing to Rinkeby
+        const culteVestingAddress = "0x638712a5338f3F9347F95A5Bf162C6B1eDa7ae94";
+        const teamVestingAddress = "0xe71C45abF91E64e244e61cf9035c8d99d9A8D88F";
+        const exchangeVestingAddress = "0x4f40e377aAA0b94Ad6A11738Ec007F484339Ce31";
         
         $(function() {
-            $('#culteSaleAddress').append('Culte Sale Address: <a href="https://testnet.bscscan.com/address/'+culteSaleAddress+'">'+culteSaleAddress+'</a>');
-            $('#busdAddress').append('BUSD Address: <a href="https://testnet.bscscan.com/address/'+busdAddress+'">'+busdAddress+'</a>');
-            $('#culteAddress').append('Culte Token Address: <a href="https://testnet.bscscan.com/address/'+culteAddress+'">'+culteAddress+'</a>');
-            $('#teamVestingAddress').append('Team Vesting Address: <a href="https://testnet.bscscan.com/address/'+teamVestingAddress+'">'+teamVestingAddress+'</a>');
-            $('#culteVestingAddress').append('Culte Vesting Address: <a href="https://testnet.bscscan.com/address/'+culteVestingAddress+'">'+culteVestingAddress+'</a>');
-            $('#exchangeVestingAddress').append('Exchange Vesting Address: <a href="https://testnet.bscscan.com/address/'+exchangeVestingAddress+'">'+exchangeVestingAddress+'</a>');
+            $('#culteSaleAddress').append('Culte Sale Address: <a href="https://bscscan.com/address/'+culteSaleAddress+'">'+culteSaleAddress+'</a>');
+            $('#busdAddress').append('BUSD Address: <a href="https://bscscan.com/address/'+busdAddress+'">'+busdAddress+'</a>');
+            $('#culteAddress').append('Culte Token Address: <a href="https://bscscan.com/address/'+culteAddress+'">'+culteAddress+'</a>');
+            $('#teamVestingAddress').append('Team Vesting Address: <a href="https://bscscan.com/address/'+teamVestingAddress+'">'+teamVestingAddress+'</a>');
+            $('#culteVestingAddress').append('Culte Vesting Address: <a href="https://bscscan.com/address/'+culteVestingAddress+'">'+culteVestingAddress+'</a>');
+            $('#exchangeVestingAddress').append('Exchange Vesting Address: <a href="https://bscscan.com/address/'+exchangeVestingAddress+'">'+exchangeVestingAddress+'</a>');
         });
 
 
@@ -135,6 +149,26 @@
             let tx;
             try {
                 tx = await VestingContract.release();
+                await tx.wait(1);
+            } catch (err) {
+                console.log(err);
+                alert(err.data.message);
+            }
+        });
+
+        document.getElementById('sendTokens').addEventListener('click', async function() {
+            const amount = document.getElementById("sendTokenAddress").value;
+            const recipient = document.getElementById("sendTokenAmount").value;
+            let provider = new ethers.providers.Web3Provider(web3.currentProvider);
+            var signer = provider.getSigner();
+            let account = await signer.getAddress();
+            let culteTokenAbi = [
+                "function transfer(address recipient, uint256 amount) public returns (bool)"
+            ];
+            let TokenContract = new ethers.Contract(culteAddress, culteTokenAbi, signer);
+            let tx;
+            try {
+                tx = await TokenContract.transfer(recipient, amount);
                 await tx.wait(1);
             } catch (err) {
                 console.log(err);

@@ -80,8 +80,8 @@ contract TeamVesting is Ownable {
 
         if(firstRelease) {
             firstRelease = false;
-            return 6300000;
-        } else if(now >= nextRelease) { // now >= 01/04/22
+            return 2100000;
+        } else if(now >= nextRelease) {
             uint256 percentage = currentBalance.mul(2).div(100);
             if(percentage > 0) {
                 return percentage;
@@ -90,24 +90,6 @@ contract TeamVesting is Ownable {
             }
         }
     }
-
-    /**
-     * @notice Allows the owner to revoke the vesting. Tokens already vested
-     * remain in the contract, the rest are returned to the owner.
-     */
-    /*
-    function revoke() public onlyOwner {
-
-        uint256 balance = token.balanceOf(address(this));
-
-        uint256 unreleased = releasableAmount();
-        uint256 refund = balance.sub(unreleased);
-
-        token.transfer(owner(), refund);
-
-        emit VestingRevoked();
-    }
-    */
 
     /**
     * @dev Updates the next release date to be after 31 days past
